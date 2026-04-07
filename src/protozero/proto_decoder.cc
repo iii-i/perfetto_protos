@@ -24,16 +24,13 @@
 
 #include "perfetto/base/compiler.h"
 #include "perfetto/base/logging.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/utils.h"
 #include "perfetto/protozero/proto_utils.h"
 
 namespace protozero {
 
 using namespace proto_utils;
-
-#if !PERFETTO_IS_LITTLE_ENDIAN()
-#error Unimplemented for big endian archs.
-#endif
 
 namespace {
 
@@ -113,6 +110,7 @@ ParseFieldResult ParseOneField(const uint8_t* const buffer,
       if (PERFETTO_UNLIKELY(new_pos > end))
         return res;
       memcpy(&int_value, pos, sizeof(uint64_t));
+      int_value = perfetto::base::LE64ToHost(int_value);
       break;
     }
 
@@ -121,6 +119,7 @@ ParseFieldResult ParseOneField(const uint8_t* const buffer,
       if (PERFETTO_UNLIKELY(new_pos > end))
         return res;
       memcpy(&int_value, pos, sizeof(uint32_t));
+      int_value = perfetto::base::LE64ToHost(int_value);
       break;
     }
 
