@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/ext/base/utils.h"
 
@@ -96,7 +97,8 @@ bool BufferedFrameDeserializer::EndReceive(size_t recv_size) {
     // Read the header into |payload_size|.
     uint32_t payload_size = 0;
     const char* rd_ptr = buf() + consumed_size;
-    memcpy(base::AssumeLittleEndian(&payload_size), rd_ptr, kHeaderSize);
+    memcpy(&payload_size, rd_ptr, kHeaderSize);
+    payload_size = base::LE32ToHost(payload_size);
 
     // Saturate the |payload_size| to prevent overflows. The > capacity_ check
     // below will abort the parsing.
@@ -175,9 +177,10 @@ void BufferedFrameDeserializer::DecodeFrame(const char* data, size_t size) {
 std::string BufferedFrameDeserializer::Serialize(const Frame& frame) {
   std::vector<uint8_t> payload = frame.SerializeAsArray();
   const uint32_t payload_size = static_cast<uint32_t>(payload.size());
+  const uint32_t payload_size_le = base::HostToLE32(payload_size);
   std::string buf;
   buf.resize(kHeaderSize + payload_size);
-  memcpy(&buf[0], base::AssumeLittleEndian(&payload_size), kHeaderSize);
+  memcpy(&buf[0], &payload_size_le, kHeaderSize);
   memcpy(&buf[kHeaderSize], payload.data(), payload.size());
   return buf;
 }
