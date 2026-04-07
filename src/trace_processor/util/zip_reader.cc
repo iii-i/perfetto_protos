@@ -29,6 +29,7 @@
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
 #include "perfetto/base/time.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/status_macros.h"
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/ext/base/string_view.h"
@@ -72,7 +73,8 @@ const uint16_t kDeflate = 8;
 template <typename T>
 T ReadAndAdvance(const uint8_t** ptr) {
   T res{};
-  memcpy(base::AssumeLittleEndian(&res), *ptr, sizeof(T));
+  memcpy(&res, *ptr, sizeof(T));
+  res = base::LEToHost(res);
   *ptr += sizeof(T);
   return res;
 }
