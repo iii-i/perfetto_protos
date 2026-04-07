@@ -20,6 +20,7 @@
 #include "perfetto/base/build_config.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/ext/base/bits.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/flat_hash_map_v1.h"
 #include "perfetto/ext/base/murmur_hash.h"
 #include "perfetto/ext/base/string_view.h"
@@ -409,6 +410,7 @@ class FlatHashMapV2 {
 
     PERFETTO_ALWAYS_INLINE explicit Group(const uint8_t* pos) {
       memcpy(&ctrl_, pos, sizeof(ctrl_));
+      ctrl_ = LE64ToHost(ctrl_);
     }
 
     PERFETTO_ALWAYS_INLINE Iterator Match(uint8_t h2) const {
