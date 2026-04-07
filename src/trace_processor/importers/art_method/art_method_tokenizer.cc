@@ -80,21 +80,15 @@ std::string ConstructPathname(const std::string& class_name,
 }
 
 uint64_t ToLong(const TraceBlobView& tbv) {
-  uint64_t x = 0;
-  memcpy(&x, tbv.data(), tbv.size());
-  return base::LEToHost(x);
+  return base::LoadLE<uint64_t>(tbv.data());
 }
 
 uint32_t ToInt(const TraceBlobView& tbv) {
-  uint32_t x = 0;
-  memcpy(&x, tbv.data(), tbv.size());
-  return base::LEToHost(x);
+  return base::LoadLE<uint32_t>(tbv.data());
 }
 
 uint16_t ToShort(const TraceBlobView& tbv) {
-  uint16_t x = 0;
-  memcpy(&x, tbv.data(), tbv.size());
-  return base::LEToHost(x);
+  return base::LoadLE<uint16_t>(tbv.data());
 }
 
 }  // namespace
