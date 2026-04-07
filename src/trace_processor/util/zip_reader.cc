@@ -86,10 +86,9 @@ const uint16_t kDeflate = 8;
 
 template <typename T>
 T ReadAndAdvance(const uint8_t** ptr) {
-  T res{};
-  memcpy(&res, *ptr, sizeof(T));
+  T res = base::LoadLE<T>(*ptr);
   *ptr += sizeof(T);
-  return base::LEToHost(res);
+  return res;
 }
 
 }  // namespace
