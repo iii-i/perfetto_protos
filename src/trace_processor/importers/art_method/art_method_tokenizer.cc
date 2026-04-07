@@ -28,6 +28,7 @@
 
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/status_macros.h"
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/ext/base/string_splitter.h"
@@ -73,20 +74,20 @@ std::string ConstructPathname(const std::string& class_name,
 
 uint64_t ToLong(const TraceBlobView& tbv) {
   uint64_t x = 0;
-  memcpy(base::AssumeLittleEndian(&x), tbv.data(), tbv.size());
-  return x;
+  memcpy(&x, tbv.data(), tbv.size());
+  return base::LE64ToHost(x);
 }
 
 uint32_t ToInt(const TraceBlobView& tbv) {
   uint32_t x = 0;
-  memcpy(base::AssumeLittleEndian(&x), tbv.data(), tbv.size());
-  return x;
+  memcpy(&x, tbv.data(), tbv.size());
+  return base::LE32ToHost(x);
 }
 
 uint16_t ToShort(const TraceBlobView& tbv) {
   uint16_t x = 0;
-  memcpy(base::AssumeLittleEndian(&x), tbv.data(), tbv.size());
-  return x;
+  memcpy(&x, tbv.data(), tbv.size());
+  return base::LE16ToHost(x);
 }
 
 }  // namespace
