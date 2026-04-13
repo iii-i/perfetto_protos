@@ -23,6 +23,7 @@
 #include <string>
 
 #include "perfetto/base/export.h"
+#include "perfetto/ext/base/endian.h"
 
 namespace perfetto {
 namespace base {
@@ -45,12 +46,14 @@ class PERFETTO_EXPORT_COMPONENT Uuid {
   int64_t msb() const {
     int64_t result;
     memcpy(&result, data_.data() + 8, 8);
+    result = static_cast<int64_t>(LE64ToHost(static_cast<uint64_t>(result)));
     return result;
   }
 
   int64_t lsb() const {
     int64_t result;
     memcpy(&result, data_.data(), 8);
+    result = static_cast<int64_t>(LE64ToHost(static_cast<uint64_t>(result)));
     return result;
   }
 
@@ -58,8 +61,14 @@ class PERFETTO_EXPORT_COMPONENT Uuid {
     set_lsb(lsb);
     set_msb(msb);
   }
-  void set_msb(int64_t msb) { memcpy(data_.data() + 8, &msb, 8); }
-  void set_lsb(int64_t lsb) { memcpy(data_.data(), &lsb, 8); }
+  void set_msb(int64_t msb) {
+    msb = static_cast<int64_t>(HostToLE64(static_cast<uint64_t>(msb)));
+    memcpy(data_.data() + 8, &msb, 8);
+  }
+  void set_lsb(int64_t lsb) {
+    lsb = static_cast<int64_t>(HostToLE64(static_cast<uint64_t>(lsb)));
+    memcpy(data_.data(), &lsb, 8);
+  }
 
   std::string ToString() const;
   std::string ToPrettyString() const;
