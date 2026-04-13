@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "perfetto/ext/base/http/sha1.h"
+#include "perfetto/ext/base/endian.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -24,17 +25,6 @@ namespace perfetto {
 namespace base {
 
 namespace {
-
-inline uint32_t BSwap32(uint32_t x) {
-#if defined(__GNUC__)
-  return __builtin_bswap32(x);
-#elif defined(_MSC_VER)
-  return _byteswap_ulong(x);
-#else
-  return (((x & 0xff000000u) >> 24) | ((x & 0x00ff0000u) >> 8) |
-          ((x & 0x0000ff00u) << 8) | ((x & 0x000000ffu) << 24));
-#endif
-}
 
 // Usage example:
 //
@@ -141,7 +131,7 @@ void SecureHashAlgorithm::Final() {
   Process();
 
   for (size_t t = 0; t < 5; ++t)
-    H[t] = BSwap32(H[t]);
+    H[t] = BE32ToHost(H[t]);
 }
 
 void SecureHashAlgorithm::Process() {
@@ -154,7 +144,7 @@ void SecureHashAlgorithm::Process() {
   // W and M are in a union, so no need to memcpy.
   // memcpy(W, M, sizeof(M));
   for (t = 0; t < 16; ++t)
-    W[t] = BSwap32(W[t]);
+    W[t] = HostToBE32(W[t]);
 
   // b.
   for (t = 16; t < 80; ++t)
