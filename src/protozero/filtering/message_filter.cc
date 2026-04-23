@@ -17,6 +17,7 @@
 #include "src/protozero/filtering/message_filter.h"
 
 #include "perfetto/base/logging.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/protozero/proto_utils.h"
 #include "src/protozero/filtering/string_filter.h"
 
@@ -42,7 +43,8 @@ template <typename INT_T /* uint32_t | uint64_t*/>
 inline void AppendFixed(uint32_t field_id, INT_T value, uint8_t** out) {
   *out = proto_utils::WriteVarInt(proto_utils::MakeTagFixed<INT_T>(field_id),
                                   *out);
-  memcpy(*out, &value, sizeof(value));
+  INT_T wire_value = perfetto::base::HostToLE(value);
+  memcpy(*out, &wire_value, sizeof(wire_value));
   *out += sizeof(value);
 }
 
