@@ -25,6 +25,7 @@
 
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
 #include "src/trace_processor/importers/common/clock_tracker.h"
@@ -126,7 +127,7 @@ class SpeStream : public AuxDataStream {
     PERFETTO_CHECK(record.size() >= 8);
     uint64_t timestamp;
     memcpy(&timestamp, record.data() + record.size() - 8, 8);
-    return timestamp;
+    return base::LE64ToHost(timestamp);
   }
 
   // Emits a record to the sorter. You can optionally pass the cycles value

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "perfetto/base/status.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/status_macros.h"
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/ext/base/string_view.h"
@@ -122,7 +123,8 @@ SimpleperfProtoTokenizer::ParseVersion() {
     return ParseResult::kNeedsMoreData;
   }
 
-  uint16_t version = *reinterpret_cast<const uint16_t*>(version_data->data());
+  uint16_t version =
+      base::LE16ToHost(*reinterpret_cast<const uint16_t*>(version_data->data()));
   if (version != 1) {
     return base::ErrStatus("Unsupported simpleperf version: %d", version);
   }
@@ -140,7 +142,8 @@ SimpleperfProtoTokenizer::ParseRecordSize() {
     return ParseResult::kNeedsMoreData;
   }
 
-  current_record_size_ = *reinterpret_cast<const uint32_t*>(size_data->data());
+  current_record_size_ =
+      base::LE32ToHost(*reinterpret_cast<const uint32_t*>(size_data->data()));
 
   reader_.PopFrontUntil(iter.file_offset());
   if (current_record_size_ == 0) {
