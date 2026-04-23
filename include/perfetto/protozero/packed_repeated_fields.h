@@ -24,6 +24,7 @@
 #include <type_traits>
 
 #include "perfetto/base/logging.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/protozero/proto_utils.h"
 
 namespace protozero {
@@ -105,7 +106,8 @@ class PackedFixedSizeInt : public PackedBufferBase {
                   "kMaxElementSize needs to be updated");
     GrowIfNeeded();
     PERFETTO_DCHECK(reinterpret_cast<size_t>(write_ptr_) % alignof(T) == 0);
-    memcpy(reinterpret_cast<T*>(write_ptr_), &value, sizeof(T));
+    T wire_value = perfetto::base::HostToLE(value);
+    memcpy(reinterpret_cast<T*>(write_ptr_), &wire_value, sizeof(T));
     write_ptr_ += sizeof(T);
   }
 };
