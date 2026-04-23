@@ -23,6 +23,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "perfetto/ext/base/endian.h"
+
 namespace perfetto::base {
 
 // A helper class which computes a 64-bit hash of the input data.
@@ -34,11 +36,13 @@ class FnvHasher {
   // Creates an empty hash object
   constexpr FnvHasher() = default;
 
-  // Hashes a numeric value.
+  // Hashes a numeric value. Normalizes to little-endian byte order so that the
+  // digest is stable across architectures (used for on-wire checksums).
   template <
       typename T,
       typename std::enable_if<std::is_arithmetic<T>::value, bool>::type = true>
   void Update(T data) {
+    data = HostToLE(data);
     Update(reinterpret_cast<const char*>(&data), sizeof(data));
   }
 
