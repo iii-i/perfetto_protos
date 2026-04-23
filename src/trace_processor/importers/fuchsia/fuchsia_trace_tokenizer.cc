@@ -26,6 +26,7 @@
 
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/string_view.h"
 #include "perfetto/trace_processor/trace_blob.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
@@ -132,7 +133,7 @@ base::Status FuchsiaTraceTokenizer::Parse(TraceBlobView blob) {
     }
     // Read the record length from the header.
     uint64_t header =
-        *reinterpret_cast<const uint64_t*>(leftover_bytes_.data());
+        base::LE64ToHost(*reinterpret_cast<const uint64_t*>(leftover_bytes_.data()));
     uint32_t record_len_words =
         fuchsia_trace_utils::ReadField<uint32_t>(header, 4, 15);
     uint32_t record_len_bytes = record_len_words * sizeof(uint64_t);
@@ -171,8 +172,8 @@ base::Status FuchsiaTraceTokenizer::Parse(TraceBlobView blob) {
   // size-8]. Any larger offset means we don't have enough bytes for the header.
   size_t record_offset = 0;
   while (record_offset + 8 <= size) {
-    uint64_t header =
-        *reinterpret_cast<const uint64_t*>(full_view.data() + record_offset);
+    uint64_t header = base::LE64ToHost(
+        *reinterpret_cast<const uint64_t*>(full_view.data() + record_offset));
     uint32_t record_len_bytes =
         fuchsia_trace_utils::ReadField<uint32_t>(header, 4, 15) *
         sizeof(uint64_t);
