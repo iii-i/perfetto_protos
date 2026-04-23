@@ -28,6 +28,7 @@
 
 #include "perfetto/base/export.h"
 #include "perfetto/base/logging.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/protozero/field.h"
 #include "perfetto/protozero/proto_utils.h"
 #include "perfetto/public/compiler.h"
@@ -172,8 +173,8 @@ class RepeatedFieldIterator {
 // (which will be initially stored as a single length-delimited field).
 // See |GetPackedRepeatedField| for details.
 //
-// Assumes little endianness, and that the input buffers are well formed -
-// containing an exact multiple of encoded elements.
+// Assumes the input buffers are well formed - containing an exact multiple of
+// encoded elements.
 template <proto_utils::ProtoWireType wire_type, typename CppType>
 class PackedRepeatedFieldIterator {
  public:
@@ -223,7 +224,7 @@ class PackedRepeatedFieldIterator {
       return *this;
     }
 
-    if (wire_type == ProtoWireType::kVarInt) {
+    if constexpr (wire_type == ProtoWireType::kVarInt) {
       uint64_t new_value = 0;
       const uint8_t* new_pos =
           proto_utils::ParseVarInt(read_ptr_, data_end_, &new_value);
@@ -242,6 +243,7 @@ class PackedRepeatedFieldIterator {
       // NB: the raw buffer is not guaranteed to be aligned, so neither are
       // these copies.
       memcpy(&curr_value_, read_ptr_, sizeof(CppType));
+      curr_value_ = perfetto::base::LEToHost(curr_value_);
       read_ptr_ += kStep;
     }
 
