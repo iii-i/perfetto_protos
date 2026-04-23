@@ -30,6 +30,8 @@ struct FuchsiaThreadInfo {
   uint64_t tid{0};
 };
 
+enum class FuchsiaByteOrder { kLittleEndian, kBigEndian };
+
 // Data from a trace provider that is necessary for interpreting a binary
 // record. Namely, the record itself and the entries of the string table and the
 // thread table that are referenced by the record. This enables understanding
@@ -61,6 +63,9 @@ class FuchsiaRecord {
 
   uint64_t get_ticks_per_second() { return ticks_per_second_; }
 
+  void set_byte_order(FuchsiaByteOrder byte_order) { byte_order_ = byte_order; }
+  FuchsiaByteOrder byte_order() const { return byte_order_; }
+
   TraceBlobView* record_view() { return &record_view_; }
 
  private:
@@ -70,6 +75,7 @@ class FuchsiaRecord {
   std::vector<ThreadTableEntry> thread_entries_;
 
   uint64_t ticks_per_second_ = 1000000000;
+  FuchsiaByteOrder byte_order_ = FuchsiaByteOrder::kLittleEndian;
 };
 
 }  // namespace trace_processor

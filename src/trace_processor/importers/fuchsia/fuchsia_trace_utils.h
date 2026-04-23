@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/ext/base/string_view.h"
 #include "src/trace_processor/importers/fuchsia/fuchsia_record.h"
@@ -201,10 +202,15 @@ class ArgValue {
 // In the context of Fuchsia trace records, a "word" is defined as 64 bits
 // regardless of platform. For more information, see
 // https://fuchsia.googlesource.com/fuchsia/+/refs/heads/master/docs/development/tracing/trace-format/
+inline uint64_t WordToHost(uint64_t word, FuchsiaByteOrder order) {
+  return order == FuchsiaByteOrder::kBigEndian ? base::BE64ToHost(word)
+                                               : base::LE64ToHost(word);
+}
+
 class RecordCursor {
  public:
-  RecordCursor(const uint8_t* begin, size_t length)
-      : begin_(begin), end_(begin + length) {}
+  RecordCursor(const uint8_t* begin, size_t length, FuchsiaByteOrder order)
+      : begin_(begin), end_(begin + length), order_(order) {}
 
   size_t WordIndex();
   void SetWordIndex(size_t index);
@@ -222,8 +228,11 @@ class RecordCursor {
  private:
   bool ReadWords(size_t num_words, const uint8_t** data_out);
 
+  uint64_t ReadWord(const uint8_t* data) const;
+
   const uint8_t* begin_;
   const uint8_t* end_;
+  FuchsiaByteOrder order_;
   size_t word_index_{};
 };
 
