@@ -455,7 +455,8 @@ TEST(GenProtoExtensionsTest, GenerateExtensionDescriptorsWithTestProto) {
   // It requires proto include paths to work.
   std::string proto_path = base::GetTestDataPath(
       "protos/perfetto/trace/track_event/track_event_extensions.json");
-  auto result = GenerateExtensionDescriptors(proto_path, {"."}, ".");
+  std::string repo_root = base::GetTestDataPath("");
+  auto result = GenerateExtensionDescriptors(proto_path, {repo_root}, repo_root);
   // This should succeed for local protos (test_extensions.proto and
   // android_track_event.proto). Remote entries (chromium) are skipped.
   ASSERT_TRUE(result.ok()) << result.status().message();
