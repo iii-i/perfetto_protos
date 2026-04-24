@@ -17,6 +17,7 @@
 #include "src/trace_processor/importers/proto/pigweed_detokenizer.h"
 
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -31,6 +32,12 @@ void AppendUint32(std::vector<uint8_t>* out, uint32_t value) {
   out->push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
   out->push_back(static_cast<uint8_t>((value >> 16) & 0xFF));
   out->push_back(static_cast<uint8_t>((value >> 24) & 0xFF));
+}
+
+void AppendFloat(std::vector<uint8_t>* out, float value) {
+  uint32_t bits;
+  memcpy(&bits, &value, sizeof(bits));
+  AppendUint32(out, bits);
 }
 
 // Encodes a signed integer the way Pigweed does: zigzag, then varint.
@@ -111,9 +118,7 @@ TEST(PigweedDetokenizerTest, StarPrecision) {
   std::vector<uint8_t> payload;
   AppendUint32(&payload, 0x1234);
   AppendZigZagVarInt(&payload, 2);  // precision
-  float value = 3.14159f;
-  const uint8_t* value_bytes = reinterpret_cast<const uint8_t*>(&value);
-  payload.insert(payload.end(), value_bytes, value_bytes + sizeof(value));
+  AppendFloat(&payload, 3.14159f);
 
   auto result = detok.Detokenize({payload.data(), payload.size()});
   ASSERT_TRUE(result.ok()) << result.status().message();
@@ -129,9 +134,7 @@ TEST(PigweedDetokenizerTest, StarWidthAndPrecision) {
   AppendUint32(&payload, 0x1234);
   AppendZigZagVarInt(&payload, 8);  // width
   AppendZigZagVarInt(&payload, 2);  // precision
-  float value = 3.14159f;
-  const uint8_t* value_bytes = reinterpret_cast<const uint8_t*>(&value);
-  payload.insert(payload.end(), value_bytes, value_bytes + sizeof(value));
+  AppendFloat(&payload, 3.14159f);
 
   auto result = detok.Detokenize({payload.data(), payload.size()});
   ASSERT_TRUE(result.ok()) << result.status().message();
