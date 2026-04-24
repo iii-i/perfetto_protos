@@ -38,6 +38,16 @@
 #include <uapi/asm-riscv/asm/perf_regs.h>
 #undef PERF_REG_EXTENDED_MASK
 
+// From arch/s390/include/uapi/asm/perf_regs.h, which bionic lacks.
+enum perf_event_s390_regs {
+  PERF_REG_S390_R0 = 0,
+  PERF_REG_S390_R15 = 15,
+  PERF_REG_S390_FP0 = 16,
+  PERF_REG_S390_MASK = 32,
+  PERF_REG_S390_PC = 33,
+  PERF_REG_S390_MAX = 34,
+};
+
 namespace perfetto {
 namespace profiling {
 
@@ -82,6 +92,10 @@ uint64_t PerfUserRegsMask(CpuArch arch) {
              ~(1ULL << PERF_REG_X86_GS);
     case CpuArch::RISCV64:
       return (1ULL << PERF_REG_RISCV_MAX) - 1;
+    // Skip the FPRs, which unwinding does not use.
+    case CpuArch::S390X:
+      return ((1ULL << (PERF_REG_S390_R15 + 1)) - 1) |
+             (1ULL << PERF_REG_S390_MASK) | (1ULL << PERF_REG_S390_PC);
     case CpuArch::UNKNOWN:
       break;
   }
@@ -105,9 +119,10 @@ CpuArch ArchForAbi(CpuArch arch, uint64_t abi) {
 // Register values as an array, indexed using the kernel uapi perf_events.h enum
 // values. Unsampled values will be left as zeroes.
 struct RawRegisterData {
-  static constexpr uint64_t kMaxSize =
-      constexpr_max(constexpr_max(PERF_REG_ARM_MAX, PERF_REG_ARM64_MAX),
-                    constexpr_max(PERF_REG_X86_64_MAX, PERF_REG_RISCV_MAX));
+  static constexpr uint64_t kMaxSize = constexpr_max(
+      constexpr_max(PERF_REG_ARM_MAX, PERF_REG_ARM64_MAX),
+      constexpr_max(constexpr_max(PERF_REG_X86_64_MAX, PERF_REG_RISCV_MAX),
+                    PERF_REG_S390_MAX));
   uint64_t regs[kMaxSize] = {};
 };
 
@@ -216,6 +231,21 @@ CpuRegisters PerfRegsToCpuRegs(const RawRegisterData& raw_regs, CpuArch arch) {
     // perf_event doesn't sample vlenb, which RISC-V vector extension frames
     // need for unwinding.
     cpu_regs[RISCV64_REG_VLENB] = GetLocalRiscvVlenb();
+    return cpu_regs;
+  }
+
+  if (arch == CpuArch::S390X) {
+    static_assert(
+        static_cast<int>(S390X_REG_R0) == static_cast<int>(PERF_REG_S390_R0) &&
+            static_cast<int>(S390X_REG_F0) ==
+                static_cast<int>(PERF_REG_S390_FP0) &&
+            static_cast<int>(S390X_REG_PSWM) ==
+                static_cast<int>(PERF_REG_S390_MASK) &&
+            static_cast<int>(S390X_REG_PSWA) ==
+                static_cast<int>(PERF_REG_S390_PC),
+        "register layout mismatch");
+    CpuRegisters cpu_regs(CpuArch::S390X);
+    memcpy(cpu_regs.regs, raw_regs.regs, sizeof(uint64_t) * PERF_REG_S390_MAX);
     return cpu_regs;
   }
 

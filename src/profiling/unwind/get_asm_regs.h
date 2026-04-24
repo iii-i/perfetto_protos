@@ -125,6 +125,18 @@ inline __attribute__((__always_inline__)) void GetAsmRegs(void* reg_data) {
       :
       : "t1", "memory");
 }
+#elif defined(__s390x__)
+inline __attribute__((__always_inline__)) void GetAsmRegs(void* reg_data) {
+  asm volatile(
+      "1:\n"
+      "stmg %%r0, %%r15, 0(%[base])\n"
+      "mvghi 256(%[base]), 0\n"
+      "larl %%r1, 1b\n"
+      "stg %%r1, 264(%[base])\n"
+      :
+      : [base] "a"(reg_data)
+      : "r1", "memory");
+}
 #elif defined(__x86_64__)
 inline __attribute__((__always_inline__)) void GetAsmRegs(void* reg_data) {
   asm volatile(

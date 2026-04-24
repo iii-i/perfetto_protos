@@ -57,6 +57,7 @@ void FramePointerUnwinder::TryUnwind() {
     case CpuArch::UNKNOWN:
     case CpuArch::ARM:
     case CpuArch::X86:
+    case CpuArch::S390X:
         // not supported
         ;
   }
@@ -133,6 +134,7 @@ bool FramePointerUnwinder::IsFrameValid(uint64_t fp, uint64_t sp) {
     case CpuArch::UNKNOWN:
     case CpuArch::ARM:
     case CpuArch::X86:
+    case CpuArch::S390X:
         // not supported
         ;
   }
