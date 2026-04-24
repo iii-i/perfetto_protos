@@ -102,7 +102,7 @@ bool ReadTime(const Record& record, std::optional<uint64_t>& time) {
     time = std::nullopt;
     return true;
   }
-  Reader reader(record.payload.copy());
+  Reader reader(record.payload.copy(), record.session->byte_order());
   if (record.header.type != PERF_RECORD_SAMPLE) {
     std::optional<size_t> offset = record.attr->time_offset_from_end();
     if (!offset.has_value()) {
@@ -198,13 +198,16 @@ PerfDataTokenizer::ParseHeader() {
   if (!tbv) {
     return ParsingResult::kMoreDataNeeded;
   }
-  PERFETTO_CHECK(Reader(std::move(*tbv)).Read(header_));
-
-  // TODO: Check for endianness (big endian will have letters reversed);
-  if (memcmp(header_.magic, PerfFile::kPerfMagic,
-             sizeof(PerfFile::kPerfMagic)) != 0) {
+  if (memcmp(tbv->data(), PerfFile::kPerfMagic, sizeof(PerfFile::kPerfMagic)) ==
+      0) {
+    byte_order_ = ByteOrder::kLittleEndian;
+  } else if (memcmp(tbv->data(), PerfFile::kPerfMagicBigEndian,
+                    sizeof(PerfFile::kPerfMagicBigEndian)) == 0) {
+    byte_order_ = ByteOrder::kBigEndian;
+  } else {
     return base::ErrStatus("Invalid magic string");
   }
+  PERFETTO_CHECK(Reader(std::move(*tbv), byte_order_).Read(header_));
 
   if (header_.size != sizeof(PerfFile::Header)) {
     return base::ErrStatus(
@@ -243,8 +246,9 @@ PerfDataTokenizer::ParseAttrs() {
     return ParsingResult::kMoreDataNeeded;
   }
 
-  ASSIGN_OR_RETURN(AttrsSectionReader attr_reader,
-                   AttrsSectionReader::Create(header_, std::move(*tbv)));
+  ASSIGN_OR_RETURN(
+      AttrsSectionReader attr_reader,
+      AttrsSectionReader::Create(header_, std::move(*tbv), byte_order_));
 
   PerfInvocation::Builder builder(context_);
   while (attr_reader.CanReadNext()) {
@@ -263,11 +267,12 @@ PerfDataTokenizer::ParseAttrs() {
     }
 
     std::vector<uint64_t> ids(entry.ids.size / sizeof(uint64_t));
-    PERFETTO_CHECK(Reader(std::move(*tbv)).ReadVector(ids));
+    PERFETTO_CHECK(Reader(std::move(*tbv), byte_order_).ReadVector(ids));
     builder.AddAttrAndIds(entry.attr, std::move(ids));
   }
 
   ASSIGN_OR_RETURN(perf_invocation_, builder.Build());
+  perf_invocation_->SetByteOrder(byte_order_);
   if (perf_invocation_->HasPerfClock()) {
     context_->clock_tracker->SetGlobalClock(
         ClockId::Machine(protos::pbzero::BUILTIN_CLOCK_PERF));
@@ -347,7 +352,7 @@ base::StatusOr<PerfDataTokenizer::ParsingResult> PerfDataTokenizer::ParseRecord(
   if (!tbv) {
     return ParsingResult::kMoreDataNeeded;
   }
-  PERFETTO_CHECK(Reader(std::move(*tbv)).Read(record.header));
+  PERFETTO_CHECK(Reader(std::move(*tbv), byte_order_).Read(record.header));
 
   if (record.header.size < sizeof(record.header)) {
     return base::ErrStatus("Invalid record size: %" PRIu16, record.header.size);
@@ -430,7 +435,7 @@ PerfDataTokenizer::ParseFeatureSections() {
     return ParsingResult::kMoreDataNeeded;
   }
 
-  Reader reader(std::move(*tbv));
+  Reader reader(std::move(*tbv), byte_order_);
   for (auto feature_id : feature_ids_) {
     feature_sections_.emplace_back(std::piecewise_construct,
                                    std::forward_as_tuple(feature_id),
@@ -483,7 +488,7 @@ base::Status PerfDataTokenizer::ParseFeature(uint8_t feature_id,
   switch (feature_id) {
     case feature::ID_OS_RELEASE: {
       ASSIGN_OR_RETURN(std::string os_release,
-                       feature::ParseOsRelease(std::move(data)));
+                       feature::ParseOsRelease(std::move(data), byte_order_));
       context_->metadata_tracker->SetMetadata(
           metadata::system_release,
           Variadic::String(context_->storage->InternString(os_release)));
@@ -492,14 +497,14 @@ base::Status PerfDataTokenizer::ParseFeature(uint8_t feature_id,
 
     case feature::ID_CMD_LINE: {
       ASSIGN_OR_RETURN(std::vector<std::string> args,
-                       feature::ParseCmdline(std::move(data)));
+                       feature::ParseCmdline(std::move(data), byte_order_));
       perf_invocation_->SetCmdline(args);
       return base::OkStatus();
     }
 
     case feature::ID_EVENT_DESC:
       return feature::EventDescription::Parse(
-          std::move(data), [&](feature::EventDescription desc) {
+          std::move(data), byte_order_, [&](feature::EventDescription desc) {
             for (auto id : desc.ids) {
               perf_invocation_->SetEventName(id, desc.event_string);
             }
@@ -508,7 +513,7 @@ base::Status PerfDataTokenizer::ParseFeature(uint8_t feature_id,
 
     case feature::ID_BUILD_ID:
       return feature::BuildId::Parse(
-          std::move(data), [&](feature::BuildId build_id) {
+          std::move(data), byte_order_, [&](feature::BuildId build_id) {
             perf_invocation_->AddBuildId(
                 build_id.pid, std::move(build_id.filename),
                 BuildId::FromRaw(std::move(build_id.build_id)));
@@ -517,8 +522,8 @@ base::Status PerfDataTokenizer::ParseFeature(uint8_t feature_id,
 
     case feature::ID_GROUP_DESC: {
       feature::HeaderGroupDesc group_desc;
-      RETURN_IF_ERROR(
-          feature::HeaderGroupDesc::Parse(std::move(data), group_desc));
+      RETURN_IF_ERROR(feature::HeaderGroupDesc::Parse(std::move(data),
+                                                      byte_order_, group_desc));
       // TODO(carlscab): Do someting
       break;
     }
@@ -537,7 +542,7 @@ base::Status PerfDataTokenizer::ParseFeature(uint8_t feature_id,
     case feature::ID_SIMPLEPERF_FILE2: {
       perf_invocation_->SetIsSimpleperf();
       RETURN_IF_ERROR(feature::ParseSimpleperfFile2(
-          std::move(data), [&](TraceBlobView blob) {
+          std::move(data), byte_order_, [&](TraceBlobView blob) {
             third_party::simpleperf::proto::pbzero::FileFeature::Decoder file(
                 blob.data(), blob.length());
             perf_tracker_.AddSimpleperfFile2(file);
@@ -560,14 +565,15 @@ base::Status PerfDataTokenizer::ProcessIdIndexRecord(Record record) {
     int64_t cpu;
     int64_t tid;
   };
-  Reader reader(std::move(record.payload));
+  Reader reader(std::move(record.payload), record.session->byte_order());
   uint64_t nr = 0;
   if (!reader.Read(nr)) {
     return base::ErrStatus("Failed to parse PERF_RECORD_ID_INDEX");
   }
   for (uint64_t i = 0; i < nr; ++i) {
     IdIndexEntry entry;
-    if (!reader.Read(entry)) {
+    if (!reader.Read(entry.id) || !reader.Read(entry.idx) ||
+        !reader.Read(entry.cpu) || !reader.Read(entry.tid)) {
       return base::ErrStatus("Failed to parse PERF_RECORD_ID_INDEX entry");
     }
     perf_invocation_->SetEventIdBinding(entry.id, entry.cpu, entry.tid);
@@ -588,7 +594,7 @@ base::Status PerfDataTokenizer::ProcessAuxRecord(Record record) {
 }
 
 base::Status PerfDataTokenizer::ProcessTimeConvRecord(Record record) {
-  Reader reader(std::move(record.payload));
+  Reader reader(std::move(record.payload), record.session->byte_order());
   TimeConvRecord time_conv;
   if (!reader.Read(time_conv)) {
     return base::ErrStatus("Failed to parse PERF_RECORD_TIME_CONV");
@@ -667,9 +673,12 @@ class PerfDataImporter : public TraceImporter<PerfDataImporter> {
   ~PerfDataImporter() override;
 
   SniffResult Sniff(const uint8_t* data, size_t size) const override {
-    static constexpr char kMagic[] = {'P', 'E', 'R', 'F', 'I', 'L', 'E', '2'};
-    return {size >= sizeof(kMagic) &&
-            memcmp(data, kMagic, sizeof(kMagic)) == 0};
+    using perf_importer::PerfFile;
+    return {size >= sizeof(PerfFile::kPerfMagic) &&
+            (memcmp(data, PerfFile::kPerfMagic, sizeof(PerfFile::kPerfMagic)) ==
+                 0 ||
+             memcmp(data, PerfFile::kPerfMagicBigEndian,
+                    sizeof(PerfFile::kPerfMagicBigEndian)) == 0)};
   }
 
   base::StatusOr<std::unique_ptr<ChunkedTraceReader>> CreateReader(
