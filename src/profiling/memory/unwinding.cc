@@ -25,6 +25,7 @@
 #include <unwindstack/MachineArm.h>
 #include <unwindstack/MachineArm64.h>
 #include <unwindstack/MachineRiscv64.h>
+#include <unwindstack/MachineS390x.h>
 #include <unwindstack/MachineX86.h>
 #include <unwindstack/MachineX86_64.h>
 #include <unwindstack/Maps.h>
@@ -33,12 +34,14 @@
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
 #include <unwindstack/RegsRiscv64.h>
+#include <unwindstack/RegsS390x.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/RegsX86_64.h>
 #include <unwindstack/Unwinder.h>
 #include <unwindstack/UserArm.h>
 #include <unwindstack/UserArm64.h>
 #include <unwindstack/UserRiscv64.h>
+#include <unwindstack/UserS390x.h>
 #include <unwindstack/UserX86.h>
 #include <unwindstack/UserX86_64.h>
 
@@ -109,6 +112,9 @@ std::unique_ptr<unwindstack::Regs> CreateRegsFromRawData(
       break;
     case unwindstack::ARCH_RISCV64:
       ret.reset(new unwindstack::RegsRiscv64());
+      break;
+    case unwindstack::ARCH_S390X:
+      ret.reset(new unwindstack::RegsS390x());
       break;
     case unwindstack::ARCH_UNKNOWN:
       break;
