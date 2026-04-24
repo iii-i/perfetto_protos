@@ -26,11 +26,43 @@
 #include <type_traits>
 #include <vector>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/ext/base/string_view.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
 #include "src/trace_processor/importers/perf/perf_event.h"
 
 namespace perfetto::trace_processor::perf_importer {
+
+enum class ByteOrder { kLittleEndian, kBigEndian };
+
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+T ByteSwap(T v) {
+  if constexpr (sizeof(T) == 2) {
+    uint16_t i;
+    memcpy(&i, &v, sizeof(i));
+    i = base::ByteSwap16(i);
+    memcpy(&v, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 4) {
+    uint32_t i;
+    memcpy(&i, &v, sizeof(i));
+    i = base::ByteSwap32(i);
+    memcpy(&v, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 8) {
+    uint64_t i;
+    memcpy(&i, &v, sizeof(i));
+    i = base::ByteSwap64(i);
+    memcpy(&v, &i, sizeof(i));
+  } else {
+    static_assert(sizeof(T) == 1);
+  }
+  return v;
+}
+
+inline perf_event_header ByteSwap(perf_event_header v) {
+  return {ByteSwap(v.type), ByteSwap(v.misc), ByteSwap(v.size)};
+}
+
+perf_event_attr ByteSwap(perf_event_attr v);
 
 // Helper to read various types of data fields contained in a TraceBlobView.
 // All methods return a boolean indicating whether the read was successful. A
@@ -38,10 +70,13 @@ namespace perfetto::trace_processor::perf_importer {
 // satisfy the read.
 class Reader {
  public:
-  explicit Reader(TraceBlobView tbv)
+  // Structs read in a non-host byte order need an ADL ByteSwap().
+  Reader(TraceBlobView tbv, ByteOrder order)
       : buffer_(tbv.blob()),
         current_(tbv.data()),
-        end_(current_ + tbv.size()) {}
+        end_(current_ + tbv.size()),
+        swap_((order == ByteOrder::kBigEndian) == PERFETTO_IS_LITTLE_ENDIAN()) {
+  }
 
   // Data left to be read. The value returned here decrements as read or skip
   // methods are called.
@@ -67,7 +102,13 @@ class Reader {
 
     memset(&attr, 0, sizeof(attr));
 
-    return Read(&attr, bytes_to_read) && Skip(bytes_to_skip);
+    if (!Read(&attr, bytes_to_read) || !Skip(bytes_to_skip)) {
+      return false;
+    }
+    if (swap_) {
+      attr = ByteSwap(attr);
+    }
+    return true;
   }
 
   bool ReadBlob(TraceBlobView& blob, uint32_t size) {
@@ -94,7 +135,13 @@ class Reader {
   template <typename T>
   bool Read(T& obj) {
     static_assert(std::has_unique_object_representations_v<T>);
-    return Read(&obj, sizeof(T));
+    if (!Read(&obj, sizeof(T))) {
+      return false;
+    }
+    if (swap_) {
+      obj = ByteSwap(obj);
+    }
+    return true;
   }
 
   bool Read(void* dest, size_t size) {
@@ -130,6 +177,11 @@ class Reader {
     }
     memcpy(vec.data(), current_, size);
     current_ += size;
+    if (swap_) {
+      for (T& v : vec) {
+        v = ByteSwap(v);
+      }
+    }
     return true;
   }
 
@@ -163,6 +215,7 @@ class Reader {
   RefPtr<TraceBlob> buffer_;
   const uint8_t* current_;
   const uint8_t* end_;
+  bool swap_;
 };
 
 }  // namespace perfetto::trace_processor::perf_importer
