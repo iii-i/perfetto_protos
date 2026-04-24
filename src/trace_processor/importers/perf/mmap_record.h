@@ -20,8 +20,10 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+
 #include "perfetto/base/status.h"
 #include "protos/perfetto/trace/profiling/profile_packet.pbzero.h"
+#include "src/trace_processor/importers/perf/reader.h"
 #include "src/trace_processor/util/build_id.h"
 
 namespace perfetto::trace_processor::perf_importer {
@@ -35,6 +37,11 @@ struct CommonMmapRecordFields {
   uint64_t len;
   uint64_t pgoff;
 };
+
+inline CommonMmapRecordFields ByteSwap(CommonMmapRecordFields v) {
+  return {ByteSwap(v.pid), ByteSwap(v.tid), ByteSwap(v.addr), ByteSwap(v.len),
+          ByteSwap(v.pgoff)};
+}
 
 struct MmapRecord : public CommonMmapRecordFields {
   std::string filename;

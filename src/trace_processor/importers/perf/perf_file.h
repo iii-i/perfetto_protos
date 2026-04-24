@@ -20,11 +20,14 @@
 #include <cstdint>
 
 #include "src/trace_processor/importers/perf/perf_event.h"
+#include "src/trace_processor/importers/perf/reader.h"
 
 namespace perfetto::trace_processor::perf_importer {
 
 struct PerfFile {
   static constexpr char kPerfMagic[] = {'P', 'E', 'R', 'F', 'I', 'L', 'E', '2'};
+  static constexpr char kPerfMagicBigEndian[] = {'2', 'E', 'L', 'I',
+                                                 'F', 'R', 'E', 'P'};
   struct Section {
     uint64_t offset;
     uint64_t size;
@@ -50,6 +53,23 @@ struct PerfFile {
     uint64_t num_attrs() const { return attrs.size / attr_size; }
   };
 };
+
+inline PerfFile::Section ByteSwap(PerfFile::Section v) {
+  return {ByteSwap(v.offset), ByteSwap(v.size)};
+}
+
+inline PerfFile::Header ByteSwap(PerfFile::Header v) {
+  v.size = ByteSwap(v.size);
+  v.attr_size = ByteSwap(v.attr_size);
+  v.attrs = ByteSwap(v.attrs);
+  v.data = ByteSwap(v.data);
+  v.event_types = ByteSwap(v.event_types);
+  v.flags = ByteSwap(v.flags);
+  for (uint64_t& f : v.flags1) {
+    f = ByteSwap(f);
+  }
+  return v;
+}
 
 }  // namespace perfetto::trace_processor::perf_importer
 
