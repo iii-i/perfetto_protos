@@ -317,12 +317,22 @@ TEST(ReadAndAdvanceTest, ComplexStruct) {
     uint32_t overwrite : 8;
   };
 
-  uint64_t expected[2] = {42, 0xcdffffffabababab};
+  // ReadAndAdvance<struct> uses a raw memcpy (no LE-decode). Build the
+  // buffer field-by-field in host order so both LE and BE hosts see
+  // length=0xabababab and overwrite=0xcd. The bitfield layout puts
+  // overwrite in buffer[15] on both endiannesses (MSB of a uint32 on LE,
+  // LSB on BE — which is the same byte position).
+  uint64_t timestamp = 42;
+  uint32_t length = 0xabababab;
   ComplexStruct actual = {};
   uint8_t buffer[16] = {};
   const uint8_t* start = buffer;
   const uint8_t* ptr = buffer;
-  memcpy(&buffer, &expected, 16);
+  memcpy(buffer, &timestamp, sizeof(timestamp));
+  memcpy(buffer + 8, &length, sizeof(length));
+  buffer[12] = buffer[13] = buffer[14] = 0xff;  // :24 padding
+  buffer[15] = 0xcd;                            // overwrite
+
   EXPECT_TRUE(
       CpuReader::ReadAndAdvance<ComplexStruct>(&ptr, ptr + 16, &actual));
   EXPECT_EQ(ptr, start + 16);
