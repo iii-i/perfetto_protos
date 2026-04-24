@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "perfetto/base/time.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/flags.h"
 #include "perfetto/public/abi/atomic.h"
 #include "perfetto/public/abi/backend_type.h"
@@ -280,7 +281,8 @@ class SharedLibProtozeroSerializationTest : public testing::Test {
     const uint8_t* read_ptr = reinterpret_cast<const uint8_t*>(data.data());
     const uint8_t* end = read_ptr + data.size();
     while (read_ptr < end) {
-      ret.push_back(*reinterpret_cast<const T*>(read_ptr));
+      ret.push_back(
+          perfetto::base::LEToHost(*reinterpret_cast<const T*>(read_ptr)));
       read_ptr += sizeof(T);
     }
     return ret;
