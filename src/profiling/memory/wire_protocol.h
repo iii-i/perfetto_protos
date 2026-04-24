@@ -41,7 +41,8 @@ namespace profiling {
 constexpr size_t kMaxRegisterDataSize =
     std::max({sizeof(uint32_t) * ARM_REG_MAX, sizeof(uint64_t) * ARM64_REG_MAX,
               sizeof(uint32_t) * X86_REG_MAX, sizeof(uint64_t) * X86_64_REG_MAX,
-              sizeof(uint64_t) * RISCV64_REG_MAX_WITH_PSEUDO});
+              sizeof(uint64_t) * RISCV64_REG_MAX_WITH_PSEUDO,
+              sizeof(uint64_t) * S390X_REG_MAX});
 
 // Types needed for the wire format used for communication between the client
 // and heapprofd. The basic format of a record sent by the client is
