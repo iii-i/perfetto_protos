@@ -368,6 +368,10 @@ ssize_t Client::GetStackRegister(unwindstack::ArchEnum arch) {
       reg_sp = unwindstack::RISCV64_REG_SP;
       reg_size = sizeof(uint64_t);
       break;
+    case unwindstack::ARCH_S390X:
+      reg_sp = unwindstack::S390X_REG_SP;
+      reg_size = sizeof(uint64_t);
+      break;
     case unwindstack::ARCH_UNKNOWN:
       return -1;
   }
