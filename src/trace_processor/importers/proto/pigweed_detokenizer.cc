@@ -153,6 +153,7 @@ base::StatusOr<DetokenizedString> PigweedDetokenizer::Detokenize(
 
       float value_float;
       memcpy(&value_float, ptr, sizeof(value_float));
+      value_float = base::LEToHost(value_float);
       ptr += sizeof(value_float);
       double value = static_cast<double>(value_float);
       args.push_back(value);
