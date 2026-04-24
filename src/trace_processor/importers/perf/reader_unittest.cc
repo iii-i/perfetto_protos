@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <cstdint>
 
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/trace_processor/trace_blob.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
 #include "test/gtest_and_gmock.h"
@@ -32,6 +33,11 @@ using ::testing::SizeIs;
 
 template <typename T>
 TraceBlobView TraceBlobViewFromVector(std::vector<T> nums) {
+  // Emit values as little-endian bytes so the byte stream matches the
+  // perf.data wire format on both LE and BE hosts.
+  for (T& n : nums) {
+    n = base::HostToLE(n);
+  }
   size_t data_size = sizeof(T) * nums.size();
   auto blob = TraceBlob::Allocate(data_size);
   memcpy(blob.data(), nums.data(), data_size);

@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/trace_processor/trace_blob.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
@@ -216,8 +217,8 @@ TEST(PerfInvocationTest, FindAttrInRecordWithId) {
   ASSERT_TRUE(session.ok());
 
   struct {
-    uint64_t ip = 1234;
-    uint64_t id = 2;
+    uint64_t ip = base::HostToLE64(1234);
+    uint64_t id = base::HostToLE64(2);
   } data;
 
   perf_event_header header;
@@ -229,7 +230,7 @@ TEST(PerfInvocationTest, FindAttrInRecordWithId) {
   EXPECT_THAT((*attr_ptr)->read_format(), Eq(2u));
 
   header.type = PERF_RECORD_MMAP2;
-  data.id = 1;
+  data.id = base::HostToLE64(1);
   attr_ptr = (*session)->FindAttrForRecord(
       header, TraceBlobView(TraceBlob::CopyFrom(&data, sizeof(data))));
 
@@ -255,13 +256,13 @@ TEST(PerfInvocationTest, FindAttrInRecordWithIdentifier) {
   ASSERT_TRUE(session.ok());
 
   struct {
-    uint64_t identifier = 2;
-    uint64_t ip = 1234;
+    uint64_t identifier = base::HostToLE64(2);
+    uint64_t ip = base::HostToLE64(1234);
   } sample;
 
   struct {
-    uint64_t ip = 1234;
-    uint64_t identifier = 1;
+    uint64_t ip = base::HostToLE64(1234);
+    uint64_t identifier = base::HostToLE64(1);
   } mmap;
 
   perf_event_header header;
