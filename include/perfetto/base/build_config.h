@@ -213,6 +213,12 @@
 #define PERFETTO_BUILDFLAG_DEFINE_PERFETTO_ARCH_CPU_RISCV() 0
 #endif
 
+#if defined(__s390x__)
+#define PERFETTO_BUILDFLAG_DEFINE_PERFETTO_ARCH_CPU_S390X() 1
+#else
+#define PERFETTO_BUILDFLAG_DEFINE_PERFETTO_ARCH_CPU_S390X() 0
+#endif
+
 // perfetto_build_flags.h contains the tweakable build flags defined via GN.
 // - In GN builds (e.g., standalone, chromium, v8) this file is generated at
 //   build time via the gen_rule //gn/gen_buildflags.
