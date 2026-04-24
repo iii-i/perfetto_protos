@@ -23,7 +23,10 @@
 #include <optional>
 #include <set>
 
+#include <type_traits>
+
 #include "perfetto/base/flat_set.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/paged_memory.h"
 #include "perfetto/ext/base/scoped_file.h"
 #include "perfetto/ext/base/utils.h"
@@ -233,6 +236,10 @@ class CpuReader {
       return false;
     memcpy(reinterpret_cast<void*>(out), reinterpret_cast<const void*>(*ptr),
            sizeof(T));
+    if constexpr (std::is_arithmetic_v<T>) {
+      // Ftrace wire format is little-endian.
+      *out = base::LEToHost(*out);
+    }
     *ptr += sizeof(T);
     return true;
   }
@@ -246,6 +253,8 @@ class CpuReader {
                           protozero::Message* out) {
     T t;
     memcpy(&t, reinterpret_cast<const void*>(start), sizeof(T));
+    // Ftrace wire format is little-endian.
+    t = base::LEToHost(t);
     out->AppendVarInt<T>(field_id, t);
     return t;
   }
@@ -266,6 +275,7 @@ class CpuReader {
                         FtraceMetadata* metadata) {
     T t;
     memcpy(&t, reinterpret_cast<const void*>(start), sizeof(T));
+    t = base::LEToHost(t);
     BlockDeviceID dev_id = TranslateBlockDeviceIDToUserspace<T>(t);
     out->AppendVarInt<BlockDeviceID>(field_id, dev_id);
     metadata->AddDevice(dev_id);
@@ -283,6 +293,7 @@ class CpuReader {
     // name in the names in the FtraceEventBundle.KernelSymbols.
     T full_addr;
     memcpy(&full_addr, reinterpret_cast<const void*>(start), sizeof(T));
+    full_addr = base::LEToHost(full_addr);
     uint32_t interned_index = metadata->AddSymbolAddr(full_addr);
     out->AppendVarInt(field_id, interned_index);
   }

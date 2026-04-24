@@ -25,6 +25,7 @@
 
 #include "perfetto/base/logging.h"
 #include "perfetto/ext/base/metatrace.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/utils.h"
 #include "perfetto/ext/tracing/core/trace_writer.h"
 #include "perfetto/protozero/proto_utils.h"
@@ -147,6 +148,10 @@ template <typename T>
 T ReadValue(const uint8_t* ptr) {
   T t;
   memcpy(&t, reinterpret_cast<const void*>(ptr), sizeof(T));
+  if constexpr (std::is_arithmetic_v<T>) {
+    // Ftrace wire format is little-endian.
+    t = base::LEToHost(t);
+  }
   return t;
 }
 
@@ -155,12 +160,12 @@ int64_t ReadSignedFtraceValue(const uint8_t* ptr, FtraceFieldType ftrace_type) {
   if (ftrace_type == kFtraceInt32) {
     int32_t value;
     memcpy(&value, reinterpret_cast<const void*>(ptr), sizeof(value));
-    return int64_t(value);
+    return int64_t(base::LEToHost(value));
   }
   if (ftrace_type == kFtraceInt64) {
     int64_t value;
     memcpy(&value, reinterpret_cast<const void*>(ptr), sizeof(value));
-    return value;
+    return base::LEToHost(value);
   }
   PERFETTO_FATAL("unexpected ftrace type");
 }
@@ -596,26 +601,18 @@ std::optional<CpuReader::PageHeader> CpuReader::ParsePageHeader(
 
   uint32_t size_and_flags;
 
-  // Reject upper bits, if applicable. On 32-bit, size_bytes - 4 will
-  // evaluate to 0 and this will be a no-op. On 64-bit, this will advance by 4
-  // bytes.
-  if (!PERFETTO_IS_LITTLE_ENDIAN()) {
-    PERFETTO_DCHECK(page_header_size_len >= 4);
-    *ptr += page_header_size_len - 4;
-  }
-
-  if (!CpuReader::ReadAndAdvance<uint32_t>(
-          ptr, end_of_page, &size_and_flags))
+  // Read the low 4 bytes of the commit field (size+flags). ReadAndAdvance
+  // byte-swaps from the wire's little-endian representation to host order.
+  PERFETTO_DCHECK(page_header_size_len >= 4);
+  if (!CpuReader::ReadAndAdvance<uint32_t>(ptr, end_of_page, &size_and_flags))
     return std::nullopt;
 
   page_header.size = size_and_flags & kDataSizeMask;
   page_header.lost_events = bool(size_and_flags & kMissedEventsFlag);
   PERFETTO_DCHECK(page_header.size <= base::GetSysPageSize());
 
-  if (PERFETTO_IS_LITTLE_ENDIAN()) {
-    PERFETTO_DCHECK(page_header_size_len >= 4);
-    *ptr += page_header_size_len - 4;
-  }
+  // Advance past the rest of the commit field (high bytes on 64-bit kernels).
+  *ptr += page_header_size_len - 4;
 
   return std::make_optional(page_header);
 }
@@ -643,9 +640,15 @@ protos::pbzero::FtraceParseStatus CpuReader::ParsePagePayload(
   uint64_t last_written_event_ts = 0;
 
   while (ptr < end) {
-    EventHeader event_header;
-    if (!ReadAndAdvance(&ptr, end, &event_header))
+    // EventHeader is a uint32 bit-field: low 5 bits = type_or_length, high 27
+    // bits = time_delta. Bit-field layout differs between LE/BE hosts, so read
+    // the raw 4-byte word (LE on wire) and extract the fields arithmetically.
+    uint32_t event_header_word = 0;
+    if (!ReadAndAdvance<uint32_t>(&ptr, end, &event_header_word))
       return FtraceParseStatus::FTRACE_STATUS_ABI_SHORT_EVENT_HEADER;
+    EventHeader event_header;
+    event_header.type_or_length = event_header_word & 0x1f;
+    event_header.time_delta = event_header_word >> 5;
 
     timestamp += event_header.time_delta;
 
@@ -938,16 +941,12 @@ bool CpuReader::ParseField(const Field& field,
       return true;
     case kStringPtrToString: {
       uint64_t n = 0;
-      // The ftrace field may be 8 or 4 bytes and we need to copy it into the
-      // bottom of n. In the unlikely case where the field is >8 bytes we
-      // should avoid making things worse by corrupting the stack but we
-      // don't need to handle it correctly.
+      // The ftrace field is 4 or 8 bytes on the wire (little-endian). Build the
+      // host-endian value by OR-shifting each byte into its LE position.
       size_t size = std::min<size_t>(field.ftrace_size, sizeof(n));
-      if (PERFETTO_IS_LITTLE_ENDIAN()) {
-        memcpy(&n, reinterpret_cast<const void*>(field_start), size);
-      } else {
-        memcpy(reinterpret_cast<char *>(&n) + (sizeof(uint64_t) - size),
-               reinterpret_cast<const void*>(field_start), size);
+      for (size_t i = 0; i < size; i++) {
+        n |= static_cast<uint64_t>(static_cast<uint8_t>(field_start[i]))
+             << (i * 8);
       }
       // Look up the address in the printk format map and write it into the
       // proto.

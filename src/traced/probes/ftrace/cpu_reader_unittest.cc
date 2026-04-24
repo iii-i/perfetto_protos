@@ -21,6 +21,7 @@
 #include <sys/syscall.h>
 
 #include "perfetto/base/build_config.h"
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/file_utils.h"
 #include "perfetto/ext/base/utils.h"
 #include "perfetto/protozero/proto_utils.h"
@@ -191,6 +192,13 @@ class BinaryWriter {
 
   template <typename T>
   void Write(T t) {
+    // Emit the value in little-endian byte order. CpuReader treats the ftrace
+    // wire format as little-endian (see the LE-aware ReadAndAdvance / ReadValue
+    // helpers in cpu_reader.h), so the fixtures must produce the same byte
+    // layout on both endiannesses.
+    if constexpr (std::is_arithmetic_v<T>) {
+      t = base::HostToLE(t);
+    }
     memcpy(ptr_, &t, sizeof(T));
     ptr_ += sizeof(T);
     PERFETTO_CHECK(ptr_ < ptr_ + size_);
@@ -255,6 +263,8 @@ TEST(CpuReaderTest, BinaryWriter) {
   writer.Write<uint16_t>(3);
   writer.Write<uint8_t>(4);
   auto buffer = writer.GetCopy();
+  // BinaryWriter emits values in little-endian byte order to match the
+  // ftrace wire format assumed by CpuReader.
   EXPECT_EQ(buffer.get()[0], 1);
   EXPECT_EQ(buffer.get()[1], 0);
   EXPECT_EQ(buffer.get()[2], 0);
@@ -272,7 +282,10 @@ TEST(ReadAndAdvanceTest, Number) {
   uint8_t buffer[8] = {};
   const uint8_t* start = buffer;
   const uint8_t* ptr = buffer;
-  memcpy(&buffer, &expected, 8);
+  // ReadAndAdvance treats the wire as little-endian (ftrace page format), so
+  // lay the source bytes out the same way.
+  uint64_t wire = base::HostToLE64(expected);
+  memcpy(&buffer, &wire, 8);
   EXPECT_TRUE(CpuReader::ReadAndAdvance<uint64_t>(&ptr, ptr + 8, &actual));
   EXPECT_EQ(ptr, start + 8);
   EXPECT_EQ(actual, expected);
@@ -344,7 +357,9 @@ TEST(ReadAndAdvanceTest, Underruns) {
   uint8_t buffer[9] = {};
   const uint8_t* start = buffer;
   const uint8_t* ptr = buffer;
-  memcpy(&buffer, &expected, 8);
+  // ReadAndAdvance treats the wire as little-endian.
+  uint64_t wire = base::HostToLE64(expected);
+  memcpy(&buffer, &wire, 8);
   EXPECT_TRUE(CpuReader::ReadAndAdvance<uint64_t>(&ptr, ptr + 8, &actual));
   EXPECT_EQ(ptr, start + 8);
   EXPECT_EQ(actual, expected);
