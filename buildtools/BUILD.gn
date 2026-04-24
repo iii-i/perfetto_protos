@@ -1967,6 +1967,7 @@ source_set("libunwindstack") {
     "android-unwinding/libunwindstack/RegsArm.cpp",
     "android-unwinding/libunwindstack/RegsArm64.cpp",
     "android-unwinding/libunwindstack/RegsRiscv64.cpp",
+    "android-unwinding/libunwindstack/RegsS390x.cpp",
     "android-unwinding/libunwindstack/RegsX86.cpp",
     "android-unwinding/libunwindstack/RegsX86_64.cpp",
     "android-unwinding/libunwindstack/Symbols.cpp",
@@ -1989,6 +1990,8 @@ source_set("libunwindstack") {
     sources += [ "android-unwinding/libunwindstack/AsmGetRegsX86.S" ]
   } else if (current_cpu == "x64") {
     sources += [ "android-unwinding/libunwindstack/AsmGetRegsX86_64.S" ]
+  } else if (current_cpu == "s390x") {
+    sources += [ "android-unwinding/libunwindstack/AsmGetRegsS390x.S" ]
   }
   configs -= [
     "//gn/standalone:extra_warnings",
