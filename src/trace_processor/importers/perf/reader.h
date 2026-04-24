@@ -26,6 +26,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "perfetto/ext/base/endian.h"
 #include "perfetto/ext/base/string_view.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
 #include "src/trace_processor/importers/perf/perf_event.h"
@@ -94,7 +95,13 @@ class Reader {
   template <typename T>
   bool Read(T& obj) {
     static_assert(std::has_unique_object_representations_v<T>);
-    return Read(&obj, sizeof(T));
+    if (!Read(&obj, sizeof(T))) {
+      return false;
+    }
+    if constexpr (std::is_arithmetic_v<T>) {
+      obj = base::LEToHost(obj);
+    }
+    return true;
   }
 
   bool Read(void* dest, size_t size) {
@@ -130,6 +137,11 @@ class Reader {
     }
     memcpy(vec.data(), current_, size);
     current_ += size;
+    if constexpr (std::is_arithmetic_v<T>) {
+      for (T& v : vec) {
+        v = base::LEToHost(v);
+      }
+    }
     return true;
   }
 
