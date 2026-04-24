@@ -78,8 +78,41 @@ struct RawEteInfo : public RawEtmV4Info {
   uint64_t trcdevarch;
 };
 
+RawHeader ByteSwap(RawHeader v) {
+  v.version = perf_importer::ByteSwap(v.version);
+  v.cpu_count = perf_importer::ByteSwap(v.cpu_count);
+  v.pmu_type = perf_importer::ByteSwap(v.pmu_type);
+  v.snapshot = perf_importer::ByteSwap(v.snapshot);
+  return v;
+}
+
+RawCpuHeader ByteSwap(RawCpuHeader v) {
+  v.magic = perf_importer::ByteSwap(v.magic);
+  v.cpu = perf_importer::ByteSwap(v.cpu);
+  v.trace_parameter_count = perf_importer::ByteSwap(v.trace_parameter_count);
+  return v;
+}
+
+RawEtmV4Info ByteSwap(RawEtmV4Info v) {
+  v.trcconfigr = perf_importer::ByteSwap(v.trcconfigr);
+  v.trctraceidr = perf_importer::ByteSwap(v.trctraceidr);
+  v.trcidr0 = perf_importer::ByteSwap(v.trcidr0);
+  v.trcidr1 = perf_importer::ByteSwap(v.trcidr1);
+  v.trcidr2 = perf_importer::ByteSwap(v.trcidr2);
+  v.trcidr8 = perf_importer::ByteSwap(v.trcidr8);
+  v.trcauthstatus = perf_importer::ByteSwap(v.trcauthstatus);
+  return v;
+}
+
+RawEteInfo ByteSwap(RawEteInfo v) {
+  static_cast<RawEtmV4Info&>(v) = ByteSwap(static_cast<RawEtmV4Info>(v));
+  v.trcdevarch = perf_importer::ByteSwap(v.trcdevarch);
+  return v;
+}
+
 base::StatusOr<std::unique_ptr<Configuration>> ParseEtmV4(TraceBlobView blob) {
-  perf_importer::Reader reader(std::move(blob));
+  perf_importer::Reader reader(std::move(blob),
+                               perf_importer::ByteOrder::kLittleEndian);
 
   RawEtmV4Info info;
   if (!reader.Read(info)) {
@@ -107,7 +140,8 @@ base::StatusOr<std::unique_ptr<Configuration>> ParseEtmV4(TraceBlobView blob) {
 }
 
 base::StatusOr<std::unique_ptr<Configuration>> ParseEte(TraceBlobView blob) {
-  perf_importer::Reader reader(std::move(blob));
+  perf_importer::Reader reader(std::move(blob),
+                               perf_importer::ByteOrder::kLittleEndian);
 
   RawEteInfo info;
   if (!reader.Read(info)) {
@@ -176,7 +210,8 @@ ReadCpuConfig(perf_importer::Reader& reader) {
 base::StatusOr<PerCpuConfiguration> ParseAuxtraceInfo(
     perf_importer::AuxtraceInfoRecord info) {
   PERFETTO_CHECK(info.type == PERF_AUXTRACE_CS_ETM);
-  perf_importer::Reader reader(std::move(info.payload));
+  perf_importer::Reader reader(std::move(info.payload),
+                               perf_importer::ByteOrder::kLittleEndian);
 
   RawHeader header;
   if (!reader.Read(header)) {
