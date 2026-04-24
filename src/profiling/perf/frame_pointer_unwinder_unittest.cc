@@ -60,6 +60,7 @@ class RegsFake : public unwindstack::Regs {
       case unwindstack::ARCH_UNKNOWN:
       case unwindstack::ARCH_ARM:
       case unwindstack::ARCH_X86:
+      case unwindstack::ARCH_S390X:
           // not supported
           ;
     }

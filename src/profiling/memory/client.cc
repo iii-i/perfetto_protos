@@ -345,8 +345,9 @@ bool Client::IsPostFork() {
   return false;
 }
 
-#if PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV) && \
-    !PERFETTO_HAS_BUILTIN_STACK_ADDRESS()
+#if (PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV) && \
+     !PERFETTO_HAS_BUILTIN_STACK_ADDRESS()) ||      \
+    PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_S390X)
 ssize_t Client::GetStackRegister(unwindstack::ArchEnum arch) {
   ssize_t reg_sp, reg_size;
   switch (arch) {
@@ -370,6 +371,10 @@ ssize_t Client::GetStackRegister(unwindstack::ArchEnum arch) {
       reg_sp = unwindstack::RISCV64_REG_SP;
       reg_size = sizeof(uint64_t);
       break;
+    case unwindstack::ARCH_S390X:
+      reg_sp = unwindstack::S390X_REG_SP;
+      reg_size = sizeof(uint64_t);
+      break;
     case unwindstack::ARCH_UNKNOWN:
       return -1;
   }
@@ -382,7 +387,8 @@ uintptr_t Client::GetStackAddress(char* reg_data, unwindstack::ArchEnum arch) {
     return reinterpret_cast<uintptr_t>(nullptr);
   return *reinterpret_cast<uintptr_t*>(&reg_data[reg]);
 }
-#endif /* PERFETTO_ARCH_CPU_RISCV && !PERFETTO_HAS_BUILTIN_STACK_ADDRESS() */
+#endif /* (PERFETTO_ARCH_CPU_RISCV && !PERFETTO_HAS_BUILTIN_STACK_ADDRESS()) ||
+          PERFETTO_ARCH_CPU_S390X */
 
 // The stack grows towards numerically smaller addresses, so the stack layout
 // of main calling malloc is as follows.
@@ -410,11 +416,18 @@ bool Client::RecordMalloc(uint32_t heap_id,
   // on specific architectures such as riscv can make stack unwinding failed.
   // Thus, using __builtin_stack_address() or reading the stack pointer in
   // register data directly instead of using __builtin_frame_address() on riscv.
-#if PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV)
-#if PERFETTO_HAS_BUILTIN_STACK_ADDRESS()
+#if PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV) && \
+    PERFETTO_HAS_BUILTIN_STACK_ADDRESS()
   const char* stackptr = reinterpret_cast<char*>(__builtin_stack_address());
   unwindstack::AsmGetRegs(metadata.register_data);
-#else
+#elif PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV) || \
+    PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_S390X)
+  // On these architectures __builtin_frame_address(0) does not return the
+  // stack pointer. On s390x it returns the frame base (the incoming SP, i.e.
+  // the current SP plus this function's whole frame size), which sits above
+  // the register save area rather than at the SP the unwinder starts from.
+  // Using it as the copied-stack base would leave the innermost bytes of the
+  // stack uncopied. Read the real SP from the captured registers instead.
   char* register_data = metadata.register_data;
   unwindstack::AsmGetRegs(register_data);
   const char* stackptr = reinterpret_cast<char*>(
@@ -424,11 +437,10 @@ bool Client::RecordMalloc(uint32_t heap_id,
     shmem_.SetErrorState(SharedRingBuffer::kInvalidStackBounds);
     return false;
   }
-#endif /* PERFETTO_HAS_BUILTIN_STACK_ADDRESS() */
 #else
   const char* stackptr = reinterpret_cast<char*>(__builtin_frame_address(0));
   unwindstack::AsmGetRegs(metadata.register_data);
-#endif /* PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV) */
+#endif
   const char* stackend = GetStackEnd(stackptr);
   if (!stackend) {
     PERFETTO_ELOG("Failed to find stackend.");

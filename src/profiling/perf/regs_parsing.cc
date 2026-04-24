@@ -27,15 +27,18 @@
 #include <unwindstack/MachineArm.h>
 #include <unwindstack/MachineArm64.h>
 #include <unwindstack/MachineRiscv64.h>
+#include <unwindstack/MachineS390x.h>
 #include <unwindstack/Regs.h>
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
 #include <unwindstack/RegsRiscv64.h>
+#include <unwindstack/RegsS390x.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/RegsX86_64.h>
 #include <unwindstack/UserArm.h>
 #include <unwindstack/UserArm64.h>
 #include <unwindstack/UserRiscv64.h>
+#include <unwindstack/UserS390x.h>
 #include <unwindstack/UserX86.h>
 #include <unwindstack/UserX86_64.h>
 
@@ -50,6 +53,46 @@
 #undef perf_event_arm_regs
 #include <uapi/asm-riscv/asm/perf_regs.h>
 #undef PERF_REG_EXTENDED_MASK
+
+// bionic does not ship an asm-s390 uapi tree, so inline the s390 perf_regs
+// enum from the Linux kernel (arch/s390/include/uapi/asm/perf_regs.h).
+enum perf_event_s390_regs {
+  PERF_REG_S390_R0 = 0,
+  PERF_REG_S390_R1,
+  PERF_REG_S390_R2,
+  PERF_REG_S390_R3,
+  PERF_REG_S390_R4,
+  PERF_REG_S390_R5,
+  PERF_REG_S390_R6,
+  PERF_REG_S390_R7,
+  PERF_REG_S390_R8,
+  PERF_REG_S390_R9,
+  PERF_REG_S390_R10,
+  PERF_REG_S390_R11,
+  PERF_REG_S390_R12,
+  PERF_REG_S390_R13,
+  PERF_REG_S390_R14,
+  PERF_REG_S390_R15,
+  PERF_REG_S390_FP0,
+  PERF_REG_S390_FP1,
+  PERF_REG_S390_FP2,
+  PERF_REG_S390_FP3,
+  PERF_REG_S390_FP4,
+  PERF_REG_S390_FP5,
+  PERF_REG_S390_FP6,
+  PERF_REG_S390_FP7,
+  PERF_REG_S390_FP8,
+  PERF_REG_S390_FP9,
+  PERF_REG_S390_FP10,
+  PERF_REG_S390_FP11,
+  PERF_REG_S390_FP12,
+  PERF_REG_S390_FP13,
+  PERF_REG_S390_FP14,
+  PERF_REG_S390_FP15,
+  PERF_REG_S390_MASK,
+  PERF_REG_S390_PC,
+  PERF_REG_S390_MAX,
+};
 
 namespace perfetto {
 namespace profiling {
@@ -95,6 +138,8 @@ uint64_t PerfUserRegsMask(unwindstack::ArchEnum arch) {
              ~(1ULL << PERF_REG_X86_GS);
     case unwindstack::ARCH_RISCV64:
       return (1ULL << PERF_REG_RISCV_MAX) - 1;
+    case unwindstack::ARCH_S390X:
+      return (1ULL << PERF_REG_S390_MAX) - 1;
     default:
       PERFETTO_FATAL("Unsupported architecture");
   }
@@ -117,9 +162,10 @@ unwindstack::ArchEnum ArchForAbi(unwindstack::ArchEnum arch, uint64_t abi) {
 // Register values as an array, indexed using the kernel uapi perf_events.h enum
 // values. Unsampled values will be left as zeroes.
 struct RawRegisterData {
-  static constexpr uint64_t kMaxSize =
-      constexpr_max(constexpr_max(PERF_REG_ARM_MAX, PERF_REG_ARM64_MAX),
-                    constexpr_max(PERF_REG_X86_64_MAX, PERF_REG_RISCV_MAX));
+  static constexpr uint64_t kMaxSize = constexpr_max(
+      constexpr_max(PERF_REG_ARM_MAX, PERF_REG_ARM64_MAX),
+      constexpr_max(constexpr_max(PERF_REG_X86_64_MAX, PERF_REG_RISCV_MAX),
+                    PERF_REG_S390_MAX));
   uint64_t regs[kMaxSize] = {};
 };
 
@@ -217,6 +263,25 @@ std::unique_ptr<unwindstack::Regs> ToLibUnwindstackRegs(
     // Register layout matches, pass the raw data to the Read call.
     return std::unique_ptr<unwindstack::Regs>(
         unwindstack::RegsRiscv64::Read(&raw_regs.regs[0]));
+  }
+
+  if (arch == unwindstack::ARCH_S390X) {
+    // The perf_regs layout (GPRs, FPRs, PSW mask, PSW addr) and our
+    // S390xReg enum line up, but s390x_user_regs is ordered differently
+    // (psw_mask, psw_addr, gprs[16], acrs[16], orig_gpr2), so we can't
+    // memcpy -- populate the fields we care about.
+    static_assert(static_cast<int>(unwindstack::S390X_REG_R0) ==
+                          static_cast<int>(PERF_REG_S390_R0) &&
+                      static_cast<int>(unwindstack::S390X_REG_PSWA) ==
+                          static_cast<int>(PERF_REG_S390_PC),
+                  "register layout mismatch");
+    unwindstack::s390x_user_regs s390x_user_regs = {};
+    s390x_user_regs.psw_mask = raw_regs.regs[PERF_REG_S390_MASK];
+    s390x_user_regs.psw_addr = raw_regs.regs[PERF_REG_S390_PC];
+    memcpy(&s390x_user_regs.gprs[0], &raw_regs.regs[PERF_REG_S390_R0],
+           sizeof(s390x_user_regs.gprs));
+    return std::unique_ptr<unwindstack::Regs>(
+        unwindstack::RegsS390x::Read(&s390x_user_regs));
   }
 
   PERFETTO_FATAL("Unsupported architecture");

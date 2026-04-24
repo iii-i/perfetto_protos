@@ -60,6 +60,7 @@ void FramePointerUnwinder::TryUnwind() {
     case unwindstack::ARCH_UNKNOWN:
     case unwindstack::ARCH_ARM:
     case unwindstack::ARCH_X86:
+    case unwindstack::ARCH_S390X:
         // not supported
         ;
   }
@@ -136,6 +137,7 @@ bool FramePointerUnwinder::IsFrameValid(uint64_t fp, uint64_t sp) {
     case unwindstack::ARCH_UNKNOWN:
     case unwindstack::ARCH_ARM:
     case unwindstack::ARCH_X86:
+    case unwindstack::ARCH_S390X:
         // not supported
         ;
   }
