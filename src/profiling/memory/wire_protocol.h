@@ -27,6 +27,7 @@
 #include <unwindstack/MachineArm.h>
 #include <unwindstack/MachineArm64.h>
 #include <unwindstack/MachineRiscv64.h>
+#include <unwindstack/MachineS390x.h>
 #include <unwindstack/MachineX86.h>
 #include <unwindstack/MachineX86_64.h>
 
@@ -47,7 +48,8 @@ constexpr size_t kMaxRegisterDataSize =
               sizeof(uint64_t) * unwindstack::ARM64_REG_LAST,
               sizeof(uint32_t) * unwindstack::X86_REG_LAST,
               sizeof(uint64_t) * unwindstack::X86_64_REG_LAST,
-              sizeof(uint64_t) * unwindstack::RISCV64_REG_COUNT});
+              sizeof(uint64_t) * unwindstack::RISCV64_REG_COUNT,
+              sizeof(uint64_t) * unwindstack::S390X_REG_LAST});
 
 // Types needed for the wire format used for communication between the client
 // and heapprofd. The basic format of a record sent by the client is
