@@ -35,6 +35,7 @@ enum class CpuArch : uint8_t {
   X86,
   X86_64,
   RISCV64,
+  S390X,
 };
 
 constexpr CpuArch CurrentCpuArch() {
@@ -44,6 +45,8 @@ constexpr CpuArch CurrentCpuArch() {
   return CpuArch::X86_64;
 #elif PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_RISCV)
   return CpuArch::RISCV64;
+#elif PERFETTO_BUILDFLAG(PERFETTO_ARCH_CPU_S390X)
+  return CpuArch::S390X;
 #elif defined(__arm__)
   return CpuArch::ARM;
 #elif defined(__i386__)
@@ -227,10 +230,27 @@ enum Riscv64Reg : uint16_t {
   RISCV64_REG_FP = RISCV64_REG_S0,
 };
 
+// Matches unwindstack::S390xReg; 0..31 match DWARF.
+enum S390xReg : uint16_t {
+  S390X_REG_R0 = 0,
+  S390X_REG_R11 = 11,
+  S390X_REG_R14 = 14,
+  S390X_REG_R15 = 15,
+  S390X_REG_F0 = 16,
+  S390X_REG_PSWM = 32,
+  S390X_REG_PSWA = 33,
+  S390X_REG_MAX = 34,
+
+  S390X_REG_FP = S390X_REG_R11,
+  S390X_REG_LR = S390X_REG_R14,
+  S390X_REG_SP = S390X_REG_R15,
+  S390X_REG_PC = S390X_REG_PSWA,
+};
+
 struct CpuRegisters {
   static constexpr size_t kMaxRegs =
       std::max<size_t>({ARM_REG_MAX, ARM64_REG_MAX, X86_REG_MAX, X86_64_REG_MAX,
-                        RISCV64_REG_MAX_WITH_PSEUDO});
+                        RISCV64_REG_MAX_WITH_PSEUDO, S390X_REG_MAX});
 
   CpuRegisters() = default;
   explicit CpuRegisters(CpuArch a) : arch(a) {}
@@ -260,6 +280,8 @@ struct CpuRegisters {
         return regs[X86_64_REG_RSP];
       case CpuArch::RISCV64:
         return regs[RISCV64_REG_SP];
+      case CpuArch::S390X:
+        return regs[S390X_REG_SP];
       case CpuArch::UNKNOWN:
         return 0;
     }
@@ -283,6 +305,9 @@ struct CpuRegisters {
       case CpuArch::RISCV64:
         regs[RISCV64_REG_SP] = val;
         break;
+      case CpuArch::S390X:
+        regs[S390X_REG_SP] = val;
+        break;
       case CpuArch::UNKNOWN:
         break;
     }
@@ -300,6 +325,8 @@ struct CpuRegisters {
         return regs[X86_64_REG_RIP];
       case CpuArch::RISCV64:
         return regs[RISCV64_REG_PC];
+      case CpuArch::S390X:
+        return regs[S390X_REG_PC];
       case CpuArch::UNKNOWN:
         return 0;
     }
@@ -322,6 +349,9 @@ struct CpuRegisters {
         break;
       case CpuArch::RISCV64:
         regs[RISCV64_REG_PC] = val;
+        break;
+      case CpuArch::S390X:
+        regs[S390X_REG_PC] = val;
         break;
       case CpuArch::UNKNOWN:
         break;

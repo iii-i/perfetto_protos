@@ -365,6 +365,10 @@ ssize_t Client::GetStackRegister(CpuArch arch) {
       reg_sp = RISCV64_REG_SP;
       reg_size = sizeof(uint64_t);
       break;
+    case CpuArch::S390X:
+      reg_sp = S390X_REG_SP;
+      reg_size = sizeof(uint64_t);
+      break;
     case CpuArch::UNKNOWN:
       return -1;
   }

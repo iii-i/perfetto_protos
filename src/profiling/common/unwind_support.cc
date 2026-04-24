@@ -29,6 +29,7 @@
 #include <unwindstack/RegsArm.h>
 #include <unwindstack/RegsArm64.h>
 #include <unwindstack/RegsRiscv64.h>
+#include <unwindstack/RegsS390x.h>
 #include <unwindstack/RegsX86.h>
 #include <unwindstack/RegsX86_64.h>
 
@@ -48,7 +49,9 @@ static_assert(static_cast<uint8_t>(CpuArch::UNKNOWN) ==
                   static_cast<uint8_t>(CpuArch::X86_64) ==
                       static_cast<uint8_t>(unwindstack::ARCH_X86_64) &&
                   static_cast<uint8_t>(CpuArch::RISCV64) ==
-                      static_cast<uint8_t>(unwindstack::ARCH_RISCV64),
+                      static_cast<uint8_t>(unwindstack::ARCH_RISCV64) &&
+                  static_cast<uint8_t>(CpuArch::S390X) ==
+                      static_cast<uint8_t>(unwindstack::ARCH_S390X),
               "CpuArch and unwindstack::ArchEnum must match");
 
 // This guarantees that kMaxRegisterDataSize in wire protocol stays the same.
@@ -61,7 +64,9 @@ static_assert(static_cast<uint16_t>(ARM_REG_MAX) ==
                   static_cast<uint16_t>(X86_64_REG_MAX) ==
                       static_cast<uint16_t>(unwindstack::X86_64_REG_LAST) &&
                   static_cast<uint16_t>(RISCV64_REG_MAX_WITH_PSEUDO) ==
-                      static_cast<uint16_t>(unwindstack::RISCV64_REG_COUNT),
+                      static_cast<uint16_t>(unwindstack::RISCV64_REG_COUNT) &&
+                  static_cast<uint16_t>(S390X_REG_MAX) ==
+                      static_cast<uint16_t>(unwindstack::S390X_REG_LAST),
               "Register counts must match libunwindstack");
 
 // unwindstack::Regs registers are 32-bit (4 bytes) or 64-bit (8 bytes)
@@ -102,6 +107,11 @@ std::unique_ptr<unwindstack::Regs> ToLibUnwindstackRegs(
              sizeof(uint64_t) * RISCV64_REG_MAX_WITH_PSEUDO);
       // vlenb (needed for DWARF CFA of functions using RISC-V vector
       // extensions) is expected to be already filled by the collector.
+      return regs;
+    }
+    case CpuArch::S390X: {
+      auto regs = std::make_unique<unwindstack::RegsS390x>();
+      memcpy(regs->RawData(), cpu_regs.regs, sizeof(uint64_t) * S390X_REG_MAX);
       return regs;
     }
     case CpuArch::UNKNOWN:
