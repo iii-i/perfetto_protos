@@ -22,6 +22,8 @@
 
 INCLUDE PERFETTO MODULE prelude.after_eof.indexes;
 
+INCLUDE PERFETTO MODULE prelude.after_eof.tracks;
+
 INCLUDE PERFETTO MODULE prelude.after_eof.views;
 
 -- Contains all the ftrace events in the trace. This table exists only for
