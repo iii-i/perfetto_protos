@@ -25,7 +25,7 @@
 namespace perfetto::trace_processor::perf_importer {
 
 base::Status MmapRecord::Parse(const Record& record) {
-  Reader reader(record.payload.copy());
+  Reader reader(record.payload.copy(), record.session->byte_order());
   if (!reader.Read(*static_cast<CommonMmapRecordFields*>(this)) ||
       !reader.ReadCString(filename)) {
     return base::ErrStatus("Failed to parse MMAP record");
@@ -35,13 +35,17 @@ base::Status MmapRecord::Parse(const Record& record) {
 }
 
 base::Status Mmap2Record::Parse(const Record& record) {
-  Reader reader(record.payload.copy());
-  if (!reader.Read(*static_cast<BaseMmap2Record*>(this)) ||
+  Reader reader(record.payload.copy(), record.session->byte_order());
+  has_build_id = record.mmap_has_build_id();
+  if (!reader.Read(*static_cast<CommonMmapRecordFields*>(this)) ||
+      !(has_build_id ? reader.Read(&build_id, sizeof(build_id))
+                     : reader.Read(inode.maj) && reader.Read(inode.min) &&
+                           reader.Read(inode.ino) &&
+                           reader.Read(inode.ino_generation)) ||
+      !reader.Read(prot) || !reader.Read(flags) ||
       !reader.ReadCString(filename)) {
     return base::ErrStatus("Failed to parse MMAP record");
   }
-
-  has_build_id = record.mmap_has_build_id();
 
   if (has_build_id && build_id.build_id_size >
                           BaseMmap2Record::BuildIdFields::kMaxBuildIdSize) {
