@@ -11,7 +11,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 SELF_PATH = os.path.relpath(__file__, PROJECT_ROOT).replace('\\', '/')
 
 syscalls = {}
-archs = ['arm64', 'arm32', 'x86', 'x86_64']
+archs = ['arm64', 'arm32', 'x86', 'x86_64', 's390x']
 
 
 def print_tables():
@@ -105,6 +105,11 @@ def Main():
   syscalls['arm64'] = parse_tlb(
       response.read().decode(),
       abis={'common', '64', 'renameat', 'rlimit', 'memfd_secret'})
+
+  # s390 syscall.tbl has 3 abis (common/32/64); filter to common+64 for s390x.
+  response = urlopen(KSRC + 'arch/s390/kernel/syscalls/syscall.tbl')
+  syscalls['s390x'] = parse_tlb(response.read().decode(),
+                                abis={'common', '64'})
 
   dst_file = os.path.join(PROJECT_ROOT, 'src', 'kernel_utils',
                           'syscall_table_generated.h')
