@@ -11,7 +11,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 SELF_PATH = os.path.relpath(__file__, PROJECT_ROOT).replace('\\', '/')
 
 syscalls = {}
-archs = ['arm64', 'arm32', 'x86', 'x86_64']
+archs = ['arm64', 'arm32', 'x86', 'x86_64', 's390x']
 
 
 def print_tables():
@@ -71,6 +71,21 @@ def parse_tlb(data):
   return table
 
 
+# Like parse_tlb, but only keeps rows whose abi column matches `abis`.
+# Needed for s390 where common/32/64 rows share the same numeric space.
+def parse_tlb_filtered(data, abis):
+  table = {}
+  for line in data.splitlines():
+    line = line.strip()
+    if line.startswith('#') or not (line):
+      continue
+    parts = line.split()
+    if parts[1] not in abis:
+      continue
+    table[int(parts[0])] = 'sys_' + parts[2]
+  return table
+
+
 # Parses a #define __NR_xx 1234 old-style unistd.h header.
 def parse_def(data):
   table = {}
@@ -100,6 +115,11 @@ def Main():
   #     -> include/uapi/asm-generic/unistd.h
   response = urlopen(KSRC + 'include/uapi/asm-generic/unistd.h')
   syscalls['arm64'] = parse_def(response.read().decode())
+
+  # s390 syscall.tbl has 3 abis (common/32/64); filter to common+64 for s390x.
+  response = urlopen(KSRC + 'arch/s390/kernel/syscalls/syscall.tbl')
+  syscalls['s390x'] = parse_tlb_filtered(response.read().decode(),
+                                         {'common', '64'})
 
   dst_file = os.path.join(PROJECT_ROOT, 'src', 'kernel_utils',
                           'syscall_table_generated.h')

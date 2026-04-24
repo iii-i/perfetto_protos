@@ -329,6 +329,11 @@ constexpr char kAllSyscalllNames[] =
     "sys_rt_sigtimedwait\0"
     "sys_rt_sigtimedwait_time64\0"
     "sys_rt_tgsigqueueinfo\0"
+    "sys_s390_guarded_storage\0"
+    "sys_s390_pci_mmio_read\0"
+    "sys_s390_pci_mmio_write\0"
+    "sys_s390_runtime_instr\0"
+    "sys_s390_sthyi\0"
     "sys_sched_get_priority_max\0"
     "sys_sched_get_priority_min\0"
     "sys_sched_getaffinity\0"
@@ -438,6 +443,7 @@ constexpr char kAllSyscalllNames[] =
     "sys_timer_gettime64\0"
     "sys_timer_settime\0"
     "sys_timer_settime64\0"
+    "sys_timerfd\0"
     "sys_timerfd_create\0"
     "sys_timerfd_gettime\0"
     "sys_timerfd_gettime64\0"
@@ -484,7 +490,7 @@ struct SyscallTable_arm64 {
       2282,  // 2: sys_io_submit
       2180,  // 3: sys_io_cancel
       2209,  // 4: sys_io_getevents
-      5534,  // 5: sys_setxattr
+      5644,  // 5: sys_setxattr
       2718,  // 6: sys_lsetxattr
       1243,  // 7: sys_fsetxattr
       2055,  // 8: sys_getxattr
@@ -514,17 +520,17 @@ struct SyscallTable_arm64 {
       1194,  // 32: sys_flock
       2908,  // 33: sys_mknodat
       2886,  // 34: sys_mkdirat
-      6417,  // 35: sys_unlinkat
-      5916,  // 36: sys_symlinkat
+      6539,  // 35: sys_unlinkat
+      6026,  // 36: sys_symlinkat
       2612,  // 37: sys_linkat
       4304,  // 38: sys_renameat
-      6384,  // 39: sys_umount2
+      6506,  // 39: sys_umount2
       2988,  // 40: sys_mount
       3704,  // 41: sys_pivot_root
       3367,  // 42: sys_nfsservctl
-      5828,  // 43: sys_statfs
+      5938,  // 43: sys_statfs
       1339,  // 44: sys_fstatfs
-      6297,  // 45: sys_truncate
+      6419,  // 45: sys_truncate
       1385,  // 46: sys_ftruncate
       976,   // 47: sys_fallocate
       916,   // 48: sys_faccessat
@@ -537,81 +543,81 @@ struct SyscallTable_arm64 {
       1075,  // 55: sys_fchown
       3503,  // 56: sys_openat
       579,   // 57: sys_close
-      6545,  // 58: sys_vhangup
+      6667,  // 58: sys_vhangup
       3694,  // 59: sys_pipe2
       4076,  // 60: sys_quotactl
       1633,  // 61: sys_getdents64
       2708,  // 62: sys_lseek
       4105,  // 63: sys_read
-      6636,  // 64: sys_write
+      6758,  // 64: sys_write
       4168,  // 65: sys_readv
-      6646,  // 66: sys_writev
+      6768,  // 66: sys_writev
       3812,  // 67: sys_pread64
       4021,  // 68: sys_pwrite64
       3824,  // 69: sys_preadv
       4034,  // 70: sys_pwritev
-      4971,  // 71: sys_sendfile
+      5081,  // 71: sys_sendfile
       3965,  // 72: sys_pselect6
       3775,  // 73: sys_ppoll
-      5669,  // 74: sys_signalfd4
-      6578,  // 75: sys_vmsplice
-      5784,  // 76: sys_splice
-      6015,  // 77: sys_tee
+      5779,  // 74: sys_signalfd4
+      6700,  // 75: sys_vmsplice
+      5894,  // 76: sys_splice
+      6125,  // 77: sys_tee
       4153,  // 78: sys_readlinkat
       1313,  // 79: sys_fstatat
       1291,  // 80: sys_fstat
-      5930,  // 81: sys_sync
+      6040,  // 81: sys_sync
       1365,  // 82: sys_fsync
       1134,  // 83: sys_fdatasync
-      5939,  // 84: sys_sync_file_range
-      6174,  // 85: sys_timerfd_create
-      6235,  // 86: sys_timerfd_settime
-      6193,  // 87: sys_timerfd_gettime
-      6489,  // 88: sys_utimensat
+      6049,  // 84: sys_sync_file_range
+      6296,  // 85: sys_timerfd_create
+      6357,  // 86: sys_timerfd_settime
+      6315,  // 87: sys_timerfd_gettime
+      6611,  // 88: sys_utimensat
       74,    // 89: sys_acct
       281,   // 90: sys_capget
       292,   // 91: sys_capset
       3616,  // 92: sys_personality
       892,   // 93: sys_exit
       901,   // 94: sys_exit_group
-      6613,  // 95: sys_waitid
-      5121,  // 96: sys_set_tid_address
-      6430,  // 97: sys_unshare
+      6735,  // 95: sys_waitid
+      5231,  // 96: sys_set_tid_address
+      6552,  // 97: sys_unshare
       1415,  // 98: sys_futex
-      5081,  // 99: sys_set_robust_list
+      5191,  // 99: sys_set_robust_list
       1558,  // 100: sys_get_robust_list
       3338,  // 101: sys_nanosleep
       1754,  // 102: sys_getitimer
-      5285,  // 103: sys_setitimer
+      5395,  // 103: sys_setitimer
       2453,  // 104: sys_kexec_load
       2086,  // 105: sys_init_module
       665,   // 106: sys_delete_module
-      6043,  // 107: sys_timer_create
-      6098,  // 108: sys_timer_gettime
-      6077,  // 109: sys_timer_getoverrun
-      6136,  // 110: sys_timer_settime
-      6060,  // 111: sys_timer_delete
+      6153,  // 107: sys_timer_create
+      6208,  // 108: sys_timer_gettime
+      6187,  // 109: sys_timer_getoverrun
+      6246,  // 110: sys_timer_settime
+      6170,  // 111: sys_timer_delete
       520,   // 112: sys_clock_settime
       435,   // 113: sys_clock_gettime
       394,   // 114: sys_clock_getres
       473,   // 115: sys_clock_nanosleep
-      6004,  // 116: sys_syslog
+      6114,  // 116: sys_syslog
       3998,  // 117: sys_ptrace
-      4799,  // 118: sys_sched_setparam
-      4818,  // 119: sys_sched_setscheduler
-      4677,  // 120: sys_sched_getscheduler
-      4658,  // 121: sys_sched_getparam
-      4759,  // 122: sys_sched_setaffinity
-      4618,  // 123: sys_sched_getaffinity
-      4841,  // 124: sys_sched_yield
-      4564,  // 125: sys_sched_get_priority_max
-      4591,  // 126: sys_sched_get_priority_min
-      4700,  // 127: sys_sched_rr_get_interval
+      4909,  // 118: sys_sched_setparam
+      4928,  // 119: sys_sched_setscheduler
+      4787,  // 120: sys_sched_getscheduler
+      4768,  // 121: sys_sched_getparam
+      4869,  // 122: sys_sched_setaffinity
+      4728,  // 123: sys_sched_getaffinity
+      4951,  // 124: sys_sched_yield
+      4674,  // 125: sys_sched_get_priority_max
+      4701,  // 126: sys_sched_get_priority_min
+      4810,  // 127: sys_sched_rr_get_interval
       4347,  // 128: sys_restart_syscall
       2479,  // 129: sys_kill
-      6287,  // 130: sys_tkill
-      6023,  // 131: sys_tgkill
-      5629,  // 132: sys_sigaltstack
+      6409,  // 130: sys_tkill
+      6133,  // 131: sys_tgkill
+      5739,  // 132: sys_sigaltstack
       4477,  // 133: sys_rt_sigsuspend
       4386,  // 134: sys_rt_sigaction
       4421,  // 135: sys_rt_sigprocmask
@@ -619,37 +625,37 @@ struct SyscallTable_arm64 {
       4495,  // 137: sys_rt_sigtimedwait
       4440,  // 138: sys_rt_sigqueueinfo
       4460,  // 139: sys_rt_sigreturn
-      5321,  // 140: sys_setpriority
+      5431,  // 140: sys_setpriority
       1843,  // 141: sys_getpriority
       4178,  // 142: sys_reboot
-      5337,  // 143: sys_setregid
-      5215,  // 144: sys_setgid
-      5425,  // 145: sys_setreuid
-      5510,  // 146: sys_setuid
-      5395,  // 147: sys_setresuid
+      5447,  // 143: sys_setregid
+      5325,  // 144: sys_setgid
+      5535,  // 145: sys_setreuid
+      5620,  // 146: sys_setuid
+      5505,  // 147: sys_setresuid
       1903,  // 148: sys_getresuid
-      5365,  // 149: sys_setresgid
+      5475,  // 149: sys_setresgid
       1873,  // 150: sys_getresgid
-      5187,  // 151: sys_setfsuid
-      5159,  // 152: sys_setfsgid
-      6277,  // 153: sys_times
-      5309,  // 154: sys_setpgid
+      5297,  // 151: sys_setfsuid
+      5269,  // 152: sys_setfsgid
+      6399,  // 153: sys_times
+      5419,  // 154: sys_setpgid
       1784,  // 155: sys_getpgid
       1961,  // 156: sys_getsid
-      5467,  // 157: sys_setsid
+      5577,  // 157: sys_setsid
       1724,  // 158: sys_getgroups
-      5239,  // 159: sys_setgroups
-      6396,  // 160: sys_uname
-      5269,  // 161: sys_sethostname
-      5141,  // 162: sys_setdomainname
+      5349,  // 159: sys_setgroups
+      6518,  // 160: sys_uname
+      5379,  // 161: sys_sethostname
+      5251,  // 162: sys_setdomainname
       1933,  // 163: sys_getrlimit
-      5453,  // 164: sys_setrlimit
+      5563,  // 164: sys_setrlimit
       1947,  // 165: sys_getrusage
-      6363,  // 166: sys_umask
+      6485,  // 166: sys_umask
       3802,  // 167: sys_prctl
       1598,  // 168: sys_getcpu
       2014,  // 169: sys_gettimeofday
-      5493,  // 170: sys_settimeofday
+      5603,  // 170: sys_settimeofday
       95,    // 171: sys_adjtimex
       1808,  // 172: sys_getpid
       1831,  // 173: sys_getppid
@@ -658,7 +664,7 @@ struct SyscallTable_arm64 {
       1700,  // 176: sys_getgid
       1648,  // 177: sys_getegid
       2003,  // 178: sys_gettid
-      5992,  // 179: sys_sysinfo
+      6102,  // 179: sys_sysinfo
       3099,  // 180: sys_mq_open
       3199,  // 181: sys_mq_unlink
       3158,  // 182: sys_mq_timedsend
@@ -669,28 +675,28 @@ struct SyscallTable_arm64 {
       3224,  // 187: sys_msgctl
       3246,  // 188: sys_msgrcv
       3257,  // 189: sys_msgsnd
-      4904,  // 190: sys_semget
-      4893,  // 191: sys_semctl
-      4925,  // 192: sys_semtimedop
-      4915,  // 193: sys_semop
-      5591,  // 194: sys_shmget
-      5570,  // 195: sys_shmctl
-      5560,  // 196: sys_shmat
-      5581,  // 197: sys_shmdt
-      5743,  // 198: sys_socket
-      5769,  // 199: sys_socketpair
+      5014,  // 190: sys_semget
+      5003,  // 191: sys_semctl
+      5035,  // 192: sys_semtimedop
+      5025,  // 193: sys_semop
+      5701,  // 194: sys_shmget
+      5680,  // 195: sys_shmctl
+      5670,  // 196: sys_shmat
+      5691,  // 197: sys_shmdt
+      5853,  // 198: sys_socket
+      5879,  // 199: sys_socketpair
       232,   // 200: sys_bind
       2623,  // 201: sys_listen
       40,    // 202: sys_accept
       605,   // 203: sys_connect
       1972,  // 204: sys_getsockname
       1768,  // 205: sys_getpeername
-      5024,  // 206: sys_sendto
+      5134,  // 206: sys_sendto
       4198,  // 207: sys_recvfrom
-      5478,  // 208: sys_setsockopt
+      5588,  // 208: sys_setsockopt
       1988,  // 209: sys_getsockopt
-      5602,  // 210: sys_shutdown
-      5012,  // 211: sys_sendmsg
+      5712,  // 210: sys_shutdown
+      5122,  // 211: sys_sendmsg
       4244,  // 212: sys_recvmsg
       4114,  // 213: sys_readahead
       259,   // 214: sys_brk
@@ -703,8 +709,8 @@ struct SyscallTable_arm64 {
       868,   // 221: sys_execve
       2954,  // 222: sys_mmap
       945,   // 223: sys_fadvise64
-      5893,  // 224: sys_swapon
-      5881,  // 225: sys_swapoff
+      6003,  // 224: sys_swapon
+      5991,  // 225: sys_swapoff
       3046,  // 226: sys_mprotect
       3268,  // 227: sys_msync
       2920,  // 228: sys_mlock
@@ -716,7 +722,7 @@ struct SyscallTable_arm64 {
       4256,  // 234: sys_remap_file_pages
       2787,  // 235: sys_mbind
       1540,  // 236: sys_get_mempolicy
-      5035,  // 237: sys_set_mempolicy
+      5145,  // 237: sys_set_mempolicy
       2846,  // 238: sys_migrate_pages
       3031,  // 239: sys_move_pages
       4542,  // 240: sys_rt_tgsigqueueinfo
@@ -739,29 +745,29 @@ struct SyscallTable_arm64 {
       0,     // 257:
       0,     // 258:
       0,     // 259:
-      6603,  // 260: sys_wait4
+      6725,  // 260: sys_wait4
       3847,  // 261: sys_prlimit64
       990,   // 262: sys_fanotify_init
       1008,  // 263: sys_fanotify_mark
       3316,  // 264: sys_name_to_handle_at
       3467,  // 265: sys_open_by_handle_at
       356,   // 266: sys_clock_adjtime
-      5959,  // 267: sys_syncfs
-      5299,  // 268: sys_setns
-      4999,  // 269: sys_sendmmsg
+      6069,  // 267: sys_syncfs
+      5409,  // 268: sys_setns
+      5109,  // 269: sys_sendmmsg
       3902,  // 270: sys_process_vm_readv
       3923,  // 271: sys_process_vm_writev
       2424,  // 272: sys_kcmp
       1162,  // 273: sys_finit_module
-      4781,  // 274: sys_sched_setattr
-      4640,  // 275: sys_sched_getattr
+      4891,  // 274: sys_sched_setattr
+      4750,  // 275: sys_sched_getattr
       4317,  // 276: sys_renameat2
-      4857,  // 277: sys_seccomp
+      4967,  // 277: sys_seccomp
       1859,  // 278: sys_getrandom
       2812,  // 279: sys_memfd_create
       241,   // 280: sys_bpf
       879,   // 281: sys_execveat
-      6453,  // 282: sys_userfaultfd
+      6575,  // 282: sys_userfaultfd
       2797,  // 283: sys_membarrier
       2930,  // 284: sys_mlock2
       617,   // 285: sys_copy_file_range
@@ -770,7 +776,7 @@ struct SyscallTable_arm64 {
       3748,  // 288: sys_pkey_mprotect
       3719,  // 289: sys_pkey_alloc
       3734,  // 290: sys_pkey_free
-      5852,  // 291: sys_statx
+      5962,  // 291: sys_statx
       2226,  // 292: sys_io_pgetevents
       4377,  // 293: sys_rseq
       2433,  // 294: sys_kexec_file_load
@@ -887,11 +893,11 @@ struct SyscallTable_arm64 {
       374,   // 405: sys_clock_adjtime64
       411,   // 406: sys_clock_getres_time64
       493,   // 407: sys_clock_nanosleep_time64
-      6116,  // 408: sys_timer_gettime64
-      6154,  // 409: sys_timer_settime64
-      6213,  // 410: sys_timerfd_gettime64
-      6255,  // 411: sys_timerfd_settime64
-      6503,  // 412: sys_utimensat_time64
+      6226,  // 408: sys_timer_gettime64
+      6264,  // 409: sys_timer_settime64
+      6335,  // 410: sys_timerfd_gettime64
+      6377,  // 411: sys_timerfd_settime64
+      6625,  // 412: sys_utimensat_time64
       3978,  // 413: sys_pselect6_time64
       3785,  // 414: sys_ppoll_time64
       0,     // 415:
@@ -899,10 +905,10 @@ struct SyscallTable_arm64 {
       4224,  // 417: sys_recvmmsg_time64
       3175,  // 418: sys_mq_timedsend_time64
       3131,  // 419: sys_mq_timedreceive_time64
-      4940,  // 420: sys_semtimedop_time64
+      5050,  // 420: sys_semtimedop_time64
       4515,  // 421: sys_rt_sigtimedwait_time64
       1443,  // 422: sys_futex_time64
-      4726,  // 423: sys_sched_rr_get_interval_time64
+      4836,  // 423: sys_sched_rr_get_interval_time64
       3663,  // 424: sys_pidfd_send_signal
       2337,  // 425: sys_io_uring_setup
       2296,  // 426: sys_io_uring_enter
@@ -929,7 +935,7 @@ struct SyscallTable_arm64 {
       2829,  // 447: sys_memfd_secret
       3881,  // 448: sys_process_mrelease
       1475,  // 449: sys_futex_waitv
-      5053,  // 450: sys_set_mempolicy_home_node
+      5163,  // 450: sys_set_mempolicy_home_node
       267,   // 451: sys_cachestat
       1061,  // 452: sys_fchmodat2
       2766,  // 453: sys_map_shadow_stack
@@ -946,16 +952,16 @@ struct SyscallTable_arm32 {
       892,   // 1: sys_exit
       1204,  // 2: sys_fork
       4105,  // 3: sys_read
-      6636,  // 4: sys_write
+      6758,  // 4: sys_write
       3458,  // 5: sys_open
       579,   // 6: sys_close
       0,     // 7:
       637,   // 8: sys_creat
       2603,  // 9: sys_link
-      6406,  // 10: sys_unlink
+      6528,  // 10: sys_unlink
       868,   // 11: sys_execve
       303,   // 12: sys_chdir
-      6034,  // 13: sys_time
+      6144,  // 13: sys_time
       2898,  // 14: sys_mknod
       313,   // 15: sys_chmod
       2565,  // 16: sys_lchown
@@ -964,111 +970,111 @@ struct SyscallTable_arm32 {
       2708,  // 19: sys_lseek
       1808,  // 20: sys_getpid
       2988,  // 21: sys_mount
-      6373,  // 22: sys_umount
-      5510,  // 23: sys_setuid
+      6495,  // 22: sys_umount
+      5620,  // 23: sys_setuid
       2031,  // 24: sys_getuid
-      5862,  // 25: sys_stime
+      5972,  // 25: sys_stime
       3998,  // 26: sys_ptrace
       124,   // 27: sys_alarm
       0,     // 28:
       3526,  // 29: sys_pause
-      6479,  // 30: sys_utime
+      6601,  // 30: sys_utime
       0,     // 31:
       0,     // 32:
       63,    // 33: sys_access
       3382,  // 34: sys_nice
       0,     // 35:
-      5930,  // 36: sys_sync
+      6040,  // 36: sys_sync
       2479,  // 37: sys_kill
       4293,  // 38: sys_rename
       2876,  // 39: sys_mkdir
       4367,  // 40: sys_rmdir
       683,   // 41: sys_dup
       3685,  // 42: sys_pipe
-      6277,  // 43: sys_times
+      6399,  // 43: sys_times
       0,     // 44:
       259,   // 45: sys_brk
-      5215,  // 46: sys_setgid
+      5325,  // 46: sys_setgid
       1700,  // 47: sys_getgid
       0,     // 48:
       1674,  // 49: sys_geteuid
       1648,  // 50: sys_getegid
       74,    // 51: sys_acct
-      6384,  // 52: sys_umount2
+      6506,  // 52: sys_umount2
       0,     // 53:
       2356,  // 54: sys_ioctl
       1112,  // 55: sys_fcntl
       0,     // 56:
-      5309,  // 57: sys_setpgid
+      5419,  // 57: sys_setpgid
       0,     // 58:
       0,     // 59:
-      6363,  // 60: sys_umask
+      6485,  // 60: sys_umask
       345,   // 61: sys_chroot
-      6469,  // 62: sys_ustat
+      6591,  // 62: sys_ustat
       691,   // 63: sys_dup2
       1831,  // 64: sys_getppid
       1796,  // 65: sys_getpgrp
-      5467,  // 66: sys_setsid
-      5615,  // 67: sys_sigaction
+      5577,  // 66: sys_setsid
+      5725,  // 67: sys_sigaction
       0,     // 68:
       0,     // 69:
-      5425,  // 70: sys_setreuid
-      5337,  // 71: sys_setregid
-      5728,  // 72: sys_sigsuspend
-      5683,  // 73: sys_sigpending
-      5269,  // 74: sys_sethostname
-      5453,  // 75: sys_setrlimit
+      5535,  // 70: sys_setreuid
+      5447,  // 71: sys_setregid
+      5838,  // 72: sys_sigsuspend
+      5793,  // 73: sys_sigpending
+      5379,  // 74: sys_sethostname
+      5563,  // 75: sys_setrlimit
       1933,  // 76: sys_getrlimit
       1947,  // 77: sys_getrusage
       2014,  // 78: sys_gettimeofday
-      5493,  // 79: sys_settimeofday
+      5603,  // 79: sys_settimeofday
       1724,  // 80: sys_getgroups
-      5239,  // 81: sys_setgroups
-      4882,  // 82: sys_select
-      5904,  // 83: sys_symlink
+      5349,  // 81: sys_setgroups
+      4992,  // 82: sys_select
+      6014,  // 83: sys_symlink
       0,     // 84:
       4140,  // 85: sys_readlink
-      6442,  // 86: sys_uselib
-      5893,  // 87: sys_swapon
+      6564,  // 86: sys_uselib
+      6003,  // 87: sys_swapon
       4178,  // 88: sys_reboot
       4128,  // 89: sys_readdir
       2954,  // 90: sys_mmap
       3305,  // 91: sys_munmap
-      6297,  // 92: sys_truncate
+      6419,  // 92: sys_truncate
       1385,  // 93: sys_ftruncate
       1037,  // 94: sys_fchmod
       1075,  // 95: sys_fchown
       1843,  // 96: sys_getpriority
-      5321,  // 97: sys_setpriority
+      5431,  // 97: sys_setpriority
       0,     // 98:
-      5828,  // 99: sys_statfs
+      5938,  // 99: sys_statfs
       1339,  // 100: sys_fstatfs
       0,     // 101:
-      5754,  // 102: sys_socketcall
-      6004,  // 103: sys_syslog
-      5285,  // 104: sys_setitimer
+      5864,  // 102: sys_socketcall
+      6114,  // 103: sys_syslog
+      5395,  // 104: sys_setitimer
       1754,  // 105: sys_getitimer
-      5808,  // 106: sys_stat
+      5918,  // 106: sys_stat
       2732,  // 107: sys_lstat
       1291,  // 108: sys_fstat
       0,     // 109:
       0,     // 110:
-      6545,  // 111: sys_vhangup
+      6667,  // 111: sys_vhangup
       0,     // 112:
-      5970,  // 113: sys_syscall
-      6603,  // 114: sys_wait4
-      5881,  // 115: sys_swapoff
-      5992,  // 116: sys_sysinfo
+      6080,  // 113: sys_syscall
+      6725,  // 114: sys_wait4
+      5991,  // 115: sys_swapoff
+      6102,  // 116: sys_sysinfo
       2416,  // 117: sys_ipc
       1365,  // 118: sys_fsync
-      5714,  // 119: sys_sigreturn
+      5824,  // 119: sys_sigreturn
       558,   // 120: sys_clone
-      5141,  // 121: sys_setdomainname
-      6396,  // 122: sys_uname
+      5251,  // 121: sys_setdomainname
+      6518,  // 122: sys_uname
       0,     // 123:
       95,    // 124: sys_adjtimex
       3046,  // 125: sys_mprotect
-      5698,  // 126: sys_sigprocmask
+      5808,  // 126: sys_sigprocmask
       0,     // 127:
       2086,  // 128: sys_init_module
       665,   // 129: sys_delete_module
@@ -1077,18 +1083,18 @@ struct SyscallTable_arm32 {
       1784,  // 132: sys_getpgid
       1026,  // 133: sys_fchdir
       220,   // 134: sys_bdflush
-      5982,  // 135: sys_sysfs
+      6092,  // 135: sys_sysfs
       3616,  // 136: sys_personality
       0,     // 137:
-      5187,  // 138: sys_setfsuid
-      5159,  // 139: sys_setfsgid
+      5297,  // 138: sys_setfsuid
+      5269,  // 139: sys_setfsgid
       1,     // 140: sys__llseek
       1620,  // 141: sys_getdents
       13,    // 142: sys__newselect
       1194,  // 143: sys_flock
       3268,  // 144: sys_msync
       4168,  // 145: sys_readv
-      6646,  // 146: sys_writev
+      6768,  // 146: sys_writev
       1961,  // 147: sys_getsid
       1134,  // 148: sys_fdatasync
       28,    // 149: sys__sysctl
@@ -1096,23 +1102,23 @@ struct SyscallTable_arm32 {
       3278,  // 151: sys_munlock
       2941,  // 152: sys_mlockall
       3290,  // 153: sys_munlockall
-      4799,  // 154: sys_sched_setparam
-      4658,  // 155: sys_sched_getparam
-      4818,  // 156: sys_sched_setscheduler
-      4677,  // 157: sys_sched_getscheduler
-      4841,  // 158: sys_sched_yield
-      4564,  // 159: sys_sched_get_priority_max
-      4591,  // 160: sys_sched_get_priority_min
-      4700,  // 161: sys_sched_rr_get_interval
+      4909,  // 154: sys_sched_setparam
+      4768,  // 155: sys_sched_getparam
+      4928,  // 156: sys_sched_setscheduler
+      4787,  // 157: sys_sched_getscheduler
+      4951,  // 158: sys_sched_yield
+      4674,  // 159: sys_sched_get_priority_max
+      4701,  // 160: sys_sched_get_priority_min
+      4810,  // 161: sys_sched_rr_get_interval
       3338,  // 162: sys_nanosleep
       3213,  // 163: sys_mremap
-      5395,  // 164: sys_setresuid
+      5505,  // 164: sys_setresuid
       1903,  // 165: sys_getresuid
       0,     // 166:
       0,     // 167:
       3766,  // 168: sys_poll
       3367,  // 169: sys_nfsservctl
-      5365,  // 170: sys_setresgid
+      5475,  // 170: sys_setresgid
       1873,  // 171: sys_getresgid
       3802,  // 172: sys_prctl
       4460,  // 173: sys_rt_sigreturn
@@ -1128,16 +1134,16 @@ struct SyscallTable_arm32 {
       1609,  // 183: sys_getcwd
       281,   // 184: sys_capget
       292,   // 185: sys_capset
-      5629,  // 186: sys_sigaltstack
-      4971,  // 187: sys_sendfile
+      5739,  // 186: sys_sigaltstack
+      5081,  // 187: sys_sendfile
       0,     // 188:
       0,     // 189:
-      6535,  // 190: sys_vfork
-      6337,  // 191: sys_ugetrlimit
+      6657,  // 190: sys_vfork
+      6459,  // 191: sys_ugetrlimit
       2963,  // 192: sys_mmap2
-      6310,  // 193: sys_truncate64
+      6432,  // 193: sys_truncate64
       1399,  // 194: sys_ftruncate64
-      5817,  // 195: sys_stat64
+      5927,  // 195: sys_stat64
       2742,  // 196: sys_lstat64
       1301,  // 197: sys_fstat64
       2576,  // 198: sys_lchown32
@@ -1145,20 +1151,20 @@ struct SyscallTable_arm32 {
       1711,  // 200: sys_getgid32
       1686,  // 201: sys_geteuid32
       1660,  // 202: sys_getegid32
-      5438,  // 203: sys_setreuid32
-      5350,  // 204: sys_setregid32
+      5548,  // 203: sys_setreuid32
+      5460,  // 204: sys_setregid32
       1738,  // 205: sys_getgroups32
-      5253,  // 206: sys_setgroups32
+      5363,  // 206: sys_setgroups32
       1086,  // 207: sys_fchown32
-      5409,  // 208: sys_setresuid32
+      5519,  // 208: sys_setresuid32
       1917,  // 209: sys_getresuid32
-      5379,  // 210: sys_setresgid32
+      5489,  // 210: sys_setresgid32
       1887,  // 211: sys_getresgid32
       333,   // 212: sys_chown32
-      5521,  // 213: sys_setuid32
-      5226,  // 214: sys_setgid32
-      5200,  // 215: sys_setfsuid32
-      5172,  // 216: sys_setfsgid32
+      5631,  // 213: sys_setuid32
+      5336,  // 214: sys_setgid32
+      5310,  // 215: sys_setfsuid32
+      5282,  // 216: sys_setfsgid32
       1633,  // 217: sys_getdents64
       3704,  // 218: sys_pivot_root
       2864,  // 219: sys_mincore
@@ -1168,7 +1174,7 @@ struct SyscallTable_arm32 {
       0,     // 223:
       2003,  // 224: sys_gettid
       4114,  // 225: sys_readahead
-      5534,  // 226: sys_setxattr
+      5644,  // 226: sys_setxattr
       2718,  // 227: sys_lsetxattr
       1243,  // 228: sys_fsetxattr
       2055,  // 229: sys_getxattr
@@ -1180,11 +1186,11 @@ struct SyscallTable_arm32 {
       4277,  // 235: sys_removexattr
       2691,  // 236: sys_lremovexattr
       1213,  // 237: sys_fremovexattr
-      6287,  // 238: sys_tkill
-      4984,  // 239: sys_sendfile64
+      6409,  // 238: sys_tkill
+      5094,  // 239: sys_sendfile64
       1415,  // 240: sys_futex
-      4759,  // 241: sys_sched_setaffinity
-      4618,  // 242: sys_sched_getaffinity
+      4869,  // 241: sys_sched_setaffinity
+      4728,  // 242: sys_sched_getaffinity
       2269,  // 243: sys_io_setup
       2194,  // 244: sys_io_destroy
       2209,  // 245: sys_io_getevents
@@ -1198,20 +1204,20 @@ struct SyscallTable_arm32 {
       4256,  // 253: sys_remap_file_pages
       0,     // 254:
       0,     // 255:
-      5121,  // 256: sys_set_tid_address
-      6043,  // 257: sys_timer_create
-      6136,  // 258: sys_timer_settime
-      6098,  // 259: sys_timer_gettime
-      6077,  // 260: sys_timer_getoverrun
-      6060,  // 261: sys_timer_delete
+      5231,  // 256: sys_set_tid_address
+      6153,  // 257: sys_timer_create
+      6246,  // 258: sys_timer_settime
+      6208,  // 259: sys_timer_gettime
+      6187,  // 260: sys_timer_getoverrun
+      6170,  // 261: sys_timer_delete
       520,   // 262: sys_clock_settime
       435,   // 263: sys_clock_gettime
       394,   // 264: sys_clock_getres
       473,   // 265: sys_clock_nanosleep
-      5839,  // 266: sys_statfs64
+      5949,  // 266: sys_statfs64
       1351,  // 267: sys_fstatfs64
-      6023,  // 268: sys_tgkill
-      6524,  // 269: sys_utimes
+      6133,  // 268: sys_tgkill
+      6646,  // 269: sys_utimes
       175,   // 270: sys_arm_fadvise64_64
       3536,  // 271: sys_pciconfig_iobase
       3557,  // 272: sys_pciconfig_read
@@ -1222,40 +1228,40 @@ struct SyscallTable_arm32 {
       3111,  // 277: sys_mq_timedreceive
       3085,  // 278: sys_mq_notify
       3067,  // 279: sys_mq_getsetattr
-      6613,  // 280: sys_waitid
-      5743,  // 281: sys_socket
+      6735,  // 280: sys_waitid
+      5853,  // 281: sys_socket
       232,   // 282: sys_bind
       605,   // 283: sys_connect
       2623,  // 284: sys_listen
       40,    // 285: sys_accept
       1972,  // 286: sys_getsockname
       1768,  // 287: sys_getpeername
-      5769,  // 288: sys_socketpair
-      4962,  // 289: sys_send
-      5024,  // 290: sys_sendto
+      5879,  // 288: sys_socketpair
+      5072,  // 289: sys_send
+      5134,  // 290: sys_sendto
       4189,  // 291: sys_recv
       4198,  // 292: sys_recvfrom
-      5602,  // 293: sys_shutdown
-      5478,  // 294: sys_setsockopt
+      5712,  // 293: sys_shutdown
+      5588,  // 294: sys_setsockopt
       1988,  // 295: sys_getsockopt
-      5012,  // 296: sys_sendmsg
+      5122,  // 296: sys_sendmsg
       4244,  // 297: sys_recvmsg
-      4915,  // 298: sys_semop
-      4904,  // 299: sys_semget
-      4893,  // 300: sys_semctl
+      5025,  // 298: sys_semop
+      5014,  // 299: sys_semget
+      5003,  // 300: sys_semctl
       3257,  // 301: sys_msgsnd
       3246,  // 302: sys_msgrcv
       3235,  // 303: sys_msgget
       3224,  // 304: sys_msgctl
-      5560,  // 305: sys_shmat
-      5581,  // 306: sys_shmdt
-      5591,  // 307: sys_shmget
-      5570,  // 308: sys_shmctl
+      5670,  // 305: sys_shmat
+      5691,  // 306: sys_shmdt
+      5701,  // 307: sys_shmget
+      5680,  // 308: sys_shmctl
       83,    // 309: sys_add_key
       4331,  // 310: sys_request_key
       2468,  // 311: sys_keyctl
-      4925,  // 312: sys_semtimedop
-      6591,  // 313: sys_vserver
+      5035,  // 312: sys_semtimedop
+      6713,  // 313: sys_vserver
       2401,  // 314: sys_ioprio_set
       2386,  // 315: sys_ioprio_get
       2124,  // 316: sys_inotify_init
@@ -1263,41 +1269,41 @@ struct SyscallTable_arm32 {
       2159,  // 318: sys_inotify_rm_watch
       2787,  // 319: sys_mbind
       1540,  // 320: sys_get_mempolicy
-      5035,  // 321: sys_set_mempolicy
+      5145,  // 321: sys_set_mempolicy
       3503,  // 322: sys_openat
       2886,  // 323: sys_mkdirat
       2908,  // 324: sys_mknodat
       1099,  // 325: sys_fchownat
       1506,  // 326: sys_futimesat
       1325,  // 327: sys_fstatat64
-      6417,  // 328: sys_unlinkat
+      6539,  // 328: sys_unlinkat
       4304,  // 329: sys_renameat
       2612,  // 330: sys_linkat
-      5916,  // 331: sys_symlinkat
+      6026,  // 331: sys_symlinkat
       4153,  // 332: sys_readlinkat
       1048,  // 333: sys_fchmodat
       916,   // 334: sys_faccessat
       3965,  // 335: sys_pselect6
       3775,  // 336: sys_ppoll
-      6430,  // 337: sys_unshare
-      5081,  // 338: sys_set_robust_list
+      6552,  // 337: sys_unshare
+      5191,  // 338: sys_set_robust_list
       1558,  // 339: sys_get_robust_list
-      5784,  // 340: sys_splice
+      5894,  // 340: sys_splice
       196,   // 341: sys_arm_sync_file_range
-      6015,  // 342: sys_tee
-      6578,  // 343: sys_vmsplice
+      6125,  // 342: sys_tee
+      6700,  // 343: sys_vmsplice
       3031,  // 344: sys_move_pages
       1598,  // 345: sys_getcpu
       776,   // 346: sys_epoll_pwait
       2453,  // 347: sys_kexec_load
-      6489,  // 348: sys_utimensat
-      5656,  // 349: sys_signalfd
-      6174,  // 350: sys_timerfd_create
+      6611,  // 348: sys_utimensat
+      5766,  // 349: sys_signalfd
+      6296,  // 350: sys_timerfd_create
       843,   // 351: sys_eventfd
       976,   // 352: sys_fallocate
-      6235,  // 353: sys_timerfd_settime
-      6193,  // 354: sys_timerfd_gettime
-      5669,  // 355: sys_signalfd4
+      6357,  // 353: sys_timerfd_settime
+      6315,  // 354: sys_timerfd_gettime
+      5779,  // 355: sys_signalfd4
       855,   // 356: sys_eventfd2
       726,   // 357: sys_epoll_create1
       700,   // 358: sys_dup3
@@ -1315,22 +1321,22 @@ struct SyscallTable_arm32 {
       3316,  // 370: sys_name_to_handle_at
       3467,  // 371: sys_open_by_handle_at
       356,   // 372: sys_clock_adjtime
-      5959,  // 373: sys_syncfs
-      4999,  // 374: sys_sendmmsg
-      5299,  // 375: sys_setns
+      6069,  // 373: sys_syncfs
+      5109,  // 374: sys_sendmmsg
+      5409,  // 375: sys_setns
       3902,  // 376: sys_process_vm_readv
       3923,  // 377: sys_process_vm_writev
       2424,  // 378: sys_kcmp
       1162,  // 379: sys_finit_module
-      4781,  // 380: sys_sched_setattr
-      4640,  // 381: sys_sched_getattr
+      4891,  // 380: sys_sched_setattr
+      4750,  // 381: sys_sched_getattr
       4317,  // 382: sys_renameat2
-      4857,  // 383: sys_seccomp
+      4967,  // 383: sys_seccomp
       1859,  // 384: sys_getrandom
       2812,  // 385: sys_memfd_create
       241,   // 386: sys_bpf
       879,   // 387: sys_execveat
-      6453,  // 388: sys_userfaultfd
+      6575,  // 388: sys_userfaultfd
       2797,  // 389: sys_membarrier
       2930,  // 390: sys_mlock2
       617,   // 391: sys_copy_file_range
@@ -1339,7 +1345,7 @@ struct SyscallTable_arm32 {
       3748,  // 394: sys_pkey_mprotect
       3719,  // 395: sys_pkey_alloc
       3734,  // 396: sys_pkey_free
-      5852,  // 397: sys_statx
+      5962,  // 397: sys_statx
       4377,  // 398: sys_rseq
       2226,  // 399: sys_io_pgetevents
       2846,  // 400: sys_migrate_pages
@@ -1350,11 +1356,11 @@ struct SyscallTable_arm32 {
       374,   // 405: sys_clock_adjtime64
       411,   // 406: sys_clock_getres_time64
       493,   // 407: sys_clock_nanosleep_time64
-      6116,  // 408: sys_timer_gettime64
-      6154,  // 409: sys_timer_settime64
-      6213,  // 410: sys_timerfd_gettime64
-      6255,  // 411: sys_timerfd_settime64
-      6503,  // 412: sys_utimensat_time64
+      6226,  // 408: sys_timer_gettime64
+      6264,  // 409: sys_timer_settime64
+      6335,  // 410: sys_timerfd_gettime64
+      6377,  // 411: sys_timerfd_settime64
+      6625,  // 412: sys_utimensat_time64
       3978,  // 413: sys_pselect6_time64
       3785,  // 414: sys_ppoll_time64
       0,     // 415:
@@ -1362,10 +1368,10 @@ struct SyscallTable_arm32 {
       4224,  // 417: sys_recvmmsg_time64
       3175,  // 418: sys_mq_timedsend_time64
       3131,  // 419: sys_mq_timedreceive_time64
-      4940,  // 420: sys_semtimedop_time64
+      5050,  // 420: sys_semtimedop_time64
       4515,  // 421: sys_rt_sigtimedwait_time64
       1443,  // 422: sys_futex_time64
-      4726,  // 423: sys_sched_rr_get_interval_time64
+      4836,  // 423: sys_sched_rr_get_interval_time64
       3663,  // 424: sys_pidfd_send_signal
       2337,  // 425: sys_io_uring_setup
       2296,  // 426: sys_io_uring_enter
@@ -1392,7 +1398,7 @@ struct SyscallTable_arm32 {
       0,     // 447:
       3881,  // 448: sys_process_mrelease
       1475,  // 449: sys_futex_waitv
-      5053,  // 450: sys_set_mempolicy_home_node
+      5163,  // 450: sys_set_mempolicy_home_node
       267,   // 451: sys_cachestat
       1061,  // 452: sys_fchmodat2
       2766,  // 453: sys_map_shadow_stack
@@ -1409,16 +1415,16 @@ struct SyscallTable_x86 {
       892,   // 1: sys_exit
       1204,  // 2: sys_fork
       4105,  // 3: sys_read
-      6636,  // 4: sys_write
+      6758,  // 4: sys_write
       3458,  // 5: sys_open
       579,   // 6: sys_close
-      6624,  // 7: sys_waitpid
+      6746,  // 7: sys_waitpid
       637,   // 8: sys_creat
       2603,  // 9: sys_link
-      6406,  // 10: sys_unlink
+      6528,  // 10: sys_unlink
       868,   // 11: sys_execve
       303,   // 12: sys_chdir
-      6034,  // 13: sys_time
+      6144,  // 13: sys_time
       2898,  // 14: sys_mknod
       313,   // 15: sys_chmod
       2565,  // 16: sys_lchown
@@ -1427,111 +1433,111 @@ struct SyscallTable_x86 {
       2708,  // 19: sys_lseek
       1808,  // 20: sys_getpid
       2988,  // 21: sys_mount
-      6373,  // 22: sys_umount
-      5510,  // 23: sys_setuid
+      6495,  // 22: sys_umount
+      5620,  // 23: sys_setuid
       2031,  // 24: sys_getuid
-      5862,  // 25: sys_stime
+      5972,  // 25: sys_stime
       3998,  // 26: sys_ptrace
       124,   // 27: sys_alarm
       3391,  // 28: sys_oldfstat
       3526,  // 29: sys_pause
-      6479,  // 30: sys_utime
-      5872,  // 31: sys_stty
+      6601,  // 30: sys_utime
+      5982,  // 31: sys_stty
       2068,  // 32: sys_gtty
       63,    // 33: sys_access
       3382,  // 34: sys_nice
       1375,  // 35: sys_ftime
-      5930,  // 36: sys_sync
+      6040,  // 36: sys_sync
       2479,  // 37: sys_kill
       4293,  // 38: sys_rename
       2876,  // 39: sys_mkdir
       4367,  // 40: sys_rmdir
       683,   // 41: sys_dup
       3685,  // 42: sys_pipe
-      6277,  // 43: sys_times
+      6399,  // 43: sys_times
       3945,  // 44: sys_prof
       259,   // 45: sys_brk
-      5215,  // 46: sys_setgid
+      5325,  // 46: sys_setgid
       1700,  // 47: sys_getgid
-      5645,  // 48: sys_signal
+      5755,  // 48: sys_signal
       1674,  // 49: sys_geteuid
       1648,  // 50: sys_getegid
       74,    // 51: sys_acct
-      6384,  // 52: sys_umount2
+      6506,  // 52: sys_umount2
       2663,  // 53: sys_lock
       2356,  // 54: sys_ioctl
       1112,  // 55: sys_fcntl
       3059,  // 56: sys_mpx
-      5309,  // 57: sys_setpgid
-      6352,  // 58: sys_ulimit
+      5419,  // 57: sys_setpgid
+      6474,  // 58: sys_ulimit
       3417,  // 59: sys_oldolduname
-      6363,  // 60: sys_umask
+      6485,  // 60: sys_umask
       345,   // 61: sys_chroot
-      6469,  // 62: sys_ustat
+      6591,  // 62: sys_ustat
       691,   // 63: sys_dup2
       1831,  // 64: sys_getppid
       1796,  // 65: sys_getpgrp
-      5467,  // 66: sys_setsid
-      5615,  // 67: sys_sigaction
-      5547,  // 68: sys_sgetmask
-      5795,  // 69: sys_ssetmask
-      5425,  // 70: sys_setreuid
-      5337,  // 71: sys_setregid
-      5728,  // 72: sys_sigsuspend
-      5683,  // 73: sys_sigpending
-      5269,  // 74: sys_sethostname
-      5453,  // 75: sys_setrlimit
+      5577,  // 66: sys_setsid
+      5725,  // 67: sys_sigaction
+      5657,  // 68: sys_sgetmask
+      5905,  // 69: sys_ssetmask
+      5535,  // 70: sys_setreuid
+      5447,  // 71: sys_setregid
+      5838,  // 72: sys_sigsuspend
+      5793,  // 73: sys_sigpending
+      5379,  // 74: sys_sethostname
+      5563,  // 75: sys_setrlimit
       1933,  // 76: sys_getrlimit
       1947,  // 77: sys_getrusage
       2014,  // 78: sys_gettimeofday
-      5493,  // 79: sys_settimeofday
+      5603,  // 79: sys_settimeofday
       1724,  // 80: sys_getgroups
-      5239,  // 81: sys_setgroups
-      4882,  // 82: sys_select
-      5904,  // 83: sys_symlink
+      5349,  // 81: sys_setgroups
+      4992,  // 82: sys_select
+      6014,  // 83: sys_symlink
       3404,  // 84: sys_oldlstat
       4140,  // 85: sys_readlink
-      6442,  // 86: sys_uselib
-      5893,  // 87: sys_swapon
+      6564,  // 86: sys_uselib
+      6003,  // 87: sys_swapon
       4178,  // 88: sys_reboot
       4128,  // 89: sys_readdir
       2954,  // 90: sys_mmap
       3305,  // 91: sys_munmap
-      6297,  // 92: sys_truncate
+      6419,  // 92: sys_truncate
       1385,  // 93: sys_ftruncate
       1037,  // 94: sys_fchmod
       1075,  // 95: sys_fchown
       1843,  // 96: sys_getpriority
-      5321,  // 97: sys_setpriority
+      5431,  // 97: sys_setpriority
       3954,  // 98: sys_profil
-      5828,  // 99: sys_statfs
+      5938,  // 99: sys_statfs
       1339,  // 100: sys_fstatfs
       2366,  // 101: sys_ioperm
-      5754,  // 102: sys_socketcall
-      6004,  // 103: sys_syslog
-      5285,  // 104: sys_setitimer
+      5864,  // 102: sys_socketcall
+      6114,  // 103: sys_syslog
+      5395,  // 104: sys_setitimer
       1754,  // 105: sys_getitimer
-      5808,  // 106: sys_stat
+      5918,  // 106: sys_stat
       2732,  // 107: sys_lstat
       1291,  // 108: sys_fstat
       3445,  // 109: sys_olduname
       2377,  // 110: sys_iopl
-      6545,  // 111: sys_vhangup
+      6667,  // 111: sys_vhangup
       2077,  // 112: sys_idle
-      6566,  // 113: sys_vm86old
-      6603,  // 114: sys_wait4
-      5881,  // 115: sys_swapoff
-      5992,  // 116: sys_sysinfo
+      6688,  // 113: sys_vm86old
+      6725,  // 114: sys_wait4
+      5991,  // 115: sys_swapoff
+      6102,  // 116: sys_sysinfo
       2416,  // 117: sys_ipc
       1365,  // 118: sys_fsync
-      5714,  // 119: sys_sigreturn
+      5824,  // 119: sys_sigreturn
       558,   // 120: sys_clone
-      5141,  // 121: sys_setdomainname
-      6396,  // 122: sys_uname
+      5251,  // 121: sys_setdomainname
+      6518,  // 122: sys_uname
       2973,  // 123: sys_modify_ldt
       95,    // 124: sys_adjtimex
       3046,  // 125: sys_mprotect
-      5698,  // 126: sys_sigprocmask
+      5808,  // 126: sys_sigprocmask
       647,   // 127: sys_create_module
       2086,  // 128: sys_init_module
       665,   // 129: sys_delete_module
@@ -1540,18 +1546,18 @@ struct SyscallTable_x86 {
       1784,  // 132: sys_getpgid
       1026,  // 133: sys_fchdir
       220,   // 134: sys_bdflush
-      5982,  // 135: sys_sysfs
+      6092,  // 135: sys_sysfs
       3616,  // 136: sys_personality
       108,   // 137: sys_afs_syscall
-      5187,  // 138: sys_setfsuid
-      5159,  // 139: sys_setfsgid
+      5297,  // 138: sys_setfsuid
+      5269,  // 139: sys_setfsgid
       1,     // 140: sys__llseek
       1620,  // 141: sys_getdents
       13,    // 142: sys__newselect
       1194,  // 143: sys_flock
       3268,  // 144: sys_msync
       4168,  // 145: sys_readv
-      6646,  // 146: sys_writev
+      6768,  // 146: sys_writev
       1961,  // 147: sys_getsid
       1134,  // 148: sys_fdatasync
       28,    // 149: sys__sysctl
@@ -1559,23 +1565,23 @@ struct SyscallTable_x86 {
       3278,  // 151: sys_munlock
       2941,  // 152: sys_mlockall
       3290,  // 153: sys_munlockall
-      4799,  // 154: sys_sched_setparam
-      4658,  // 155: sys_sched_getparam
-      4818,  // 156: sys_sched_setscheduler
-      4677,  // 157: sys_sched_getscheduler
-      4841,  // 158: sys_sched_yield
-      4564,  // 159: sys_sched_get_priority_max
-      4591,  // 160: sys_sched_get_priority_min
-      4700,  // 161: sys_sched_rr_get_interval
+      4909,  // 154: sys_sched_setparam
+      4768,  // 155: sys_sched_getparam
+      4928,  // 156: sys_sched_setscheduler
+      4787,  // 157: sys_sched_getscheduler
+      4951,  // 158: sys_sched_yield
+      4674,  // 159: sys_sched_get_priority_max
+      4701,  // 160: sys_sched_get_priority_min
+      4810,  // 161: sys_sched_rr_get_interval
       3338,  // 162: sys_nanosleep
       3213,  // 163: sys_mremap
-      5395,  // 164: sys_setresuid
+      5505,  // 164: sys_setresuid
       1903,  // 165: sys_getresuid
-      6557,  // 166: sys_vm86
+      6679,  // 166: sys_vm86
       4059,  // 167: sys_query_module
       3766,  // 168: sys_poll
       3367,  // 169: sys_nfsservctl
-      5365,  // 170: sys_setresgid
+      5475,  // 170: sys_setresgid
       1873,  // 171: sys_getresgid
       3802,  // 172: sys_prctl
       4460,  // 173: sys_rt_sigreturn
@@ -1591,16 +1597,16 @@ struct SyscallTable_x86 {
       1609,  // 183: sys_getcwd
       281,   // 184: sys_capget
       292,   // 185: sys_capset
-      5629,  // 186: sys_sigaltstack
-      4971,  // 187: sys_sendfile
+      5739,  // 186: sys_sigaltstack
+      5081,  // 187: sys_sendfile
       1819,  // 188: sys_getpmsg
       4009,  // 189: sys_putpmsg
-      6535,  // 190: sys_vfork
-      6337,  // 191: sys_ugetrlimit
+      6657,  // 190: sys_vfork
+      6459,  // 191: sys_ugetrlimit
       2963,  // 192: sys_mmap2
-      6310,  // 193: sys_truncate64
+      6432,  // 193: sys_truncate64
       1399,  // 194: sys_ftruncate64
-      5817,  // 195: sys_stat64
+      5927,  // 195: sys_stat64
       2742,  // 196: sys_lstat64
       1301,  // 197: sys_fstat64
       2576,  // 198: sys_lchown32
@@ -1608,20 +1614,20 @@ struct SyscallTable_x86 {
       1711,  // 200: sys_getgid32
       1686,  // 201: sys_geteuid32
       1660,  // 202: sys_getegid32
-      5438,  // 203: sys_setreuid32
-      5350,  // 204: sys_setregid32
+      5548,  // 203: sys_setreuid32
+      5460,  // 204: sys_setregid32
       1738,  // 205: sys_getgroups32
-      5253,  // 206: sys_setgroups32
+      5363,  // 206: sys_setgroups32
       1086,  // 207: sys_fchown32
-      5409,  // 208: sys_setresuid32
+      5519,  // 208: sys_setresuid32
       1917,  // 209: sys_getresuid32
-      5379,  // 210: sys_setresgid32
+      5489,  // 210: sys_setresgid32
       1887,  // 211: sys_getresgid32
       333,   // 212: sys_chown32
-      5521,  // 213: sys_setuid32
-      5226,  // 214: sys_setgid32
-      5200,  // 215: sys_setfsuid32
-      5172,  // 216: sys_setfsgid32
+      5631,  // 213: sys_setuid32
+      5336,  // 214: sys_setgid32
+      5310,  // 215: sys_setfsuid32
+      5282,  // 216: sys_setfsgid32
       3704,  // 217: sys_pivot_root
       2864,  // 218: sys_mincore
       2754,  // 219: sys_madvise
@@ -1631,7 +1637,7 @@ struct SyscallTable_x86 {
       0,     // 223:
       2003,  // 224: sys_gettid
       4114,  // 225: sys_readahead
-      5534,  // 226: sys_setxattr
+      5644,  // 226: sys_setxattr
       2718,  // 227: sys_lsetxattr
       1243,  // 228: sys_fsetxattr
       2055,  // 229: sys_getxattr
@@ -1643,12 +1649,12 @@ struct SyscallTable_x86 {
       4277,  // 235: sys_removexattr
       2691,  // 236: sys_lremovexattr
       1213,  // 237: sys_fremovexattr
-      6287,  // 238: sys_tkill
-      4984,  // 239: sys_sendfile64
+      6409,  // 238: sys_tkill
+      5094,  // 239: sys_sendfile64
       1415,  // 240: sys_futex
-      4759,  // 241: sys_sched_setaffinity
-      4618,  // 242: sys_sched_getaffinity
-      5101,  // 243: sys_set_thread_area
+      4869,  // 241: sys_sched_setaffinity
+      4728,  // 242: sys_sched_getaffinity
+      5211,  // 243: sys_set_thread_area
       1578,  // 244: sys_get_thread_area
       2269,  // 245: sys_io_setup
       2194,  // 246: sys_io_destroy
@@ -1663,25 +1669,25 @@ struct SyscallTable_x86 {
       744,   // 255: sys_epoll_ctl
       809,   // 256: sys_epoll_wait
       4256,  // 257: sys_remap_file_pages
-      5121,  // 258: sys_set_tid_address
-      6043,  // 259: sys_timer_create
-      6136,  // 260: sys_timer_settime
-      6098,  // 261: sys_timer_gettime
-      6077,  // 262: sys_timer_getoverrun
-      6060,  // 263: sys_timer_delete
+      5231,  // 258: sys_set_tid_address
+      6153,  // 259: sys_timer_create
+      6246,  // 260: sys_timer_settime
+      6208,  // 261: sys_timer_gettime
+      6187,  // 262: sys_timer_getoverrun
+      6170,  // 263: sys_timer_delete
       520,   // 264: sys_clock_settime
       435,   // 265: sys_clock_gettime
       394,   // 266: sys_clock_getres
       473,   // 267: sys_clock_nanosleep
-      5839,  // 268: sys_statfs64
+      5949,  // 268: sys_statfs64
       1351,  // 269: sys_fstatfs64
-      6023,  // 270: sys_tgkill
-      6524,  // 271: sys_utimes
+      6133,  // 270: sys_tgkill
+      6646,  // 271: sys_utimes
       959,   // 272: sys_fadvise64_64
-      6591,  // 273: sys_vserver
+      6713,  // 273: sys_vserver
       2787,  // 274: sys_mbind
       1540,  // 275: sys_get_mempolicy
-      5035,  // 276: sys_set_mempolicy
+      5145,  // 276: sys_set_mempolicy
       3099,  // 277: sys_mq_open
       3199,  // 278: sys_mq_unlink
       3158,  // 279: sys_mq_timedsend
@@ -1689,7 +1695,7 @@ struct SyscallTable_x86 {
       3085,  // 281: sys_mq_notify
       3067,  // 282: sys_mq_getsetattr
       2453,  // 283: sys_kexec_load
-      6613,  // 284: sys_waitid
+      6735,  // 284: sys_waitid
       0,     // 285:
       83,    // 286: sys_add_key
       4331,  // 287: sys_request_key
@@ -1706,33 +1712,33 @@ struct SyscallTable_x86 {
       1099,  // 298: sys_fchownat
       1506,  // 299: sys_futimesat
       1325,  // 300: sys_fstatat64
-      6417,  // 301: sys_unlinkat
+      6539,  // 301: sys_unlinkat
       4304,  // 302: sys_renameat
       2612,  // 303: sys_linkat
-      5916,  // 304: sys_symlinkat
+      6026,  // 304: sys_symlinkat
       4153,  // 305: sys_readlinkat
       1048,  // 306: sys_fchmodat
       916,   // 307: sys_faccessat
       3965,  // 308: sys_pselect6
       3775,  // 309: sys_ppoll
-      6430,  // 310: sys_unshare
-      5081,  // 311: sys_set_robust_list
+      6552,  // 310: sys_unshare
+      5191,  // 311: sys_set_robust_list
       1558,  // 312: sys_get_robust_list
-      5784,  // 313: sys_splice
-      5939,  // 314: sys_sync_file_range
-      6015,  // 315: sys_tee
-      6578,  // 316: sys_vmsplice
+      5894,  // 313: sys_splice
+      6049,  // 314: sys_sync_file_range
+      6125,  // 315: sys_tee
+      6700,  // 316: sys_vmsplice
       3031,  // 317: sys_move_pages
       1598,  // 318: sys_getcpu
       776,   // 319: sys_epoll_pwait
-      6489,  // 320: sys_utimensat
-      5656,  // 321: sys_signalfd
-      6174,  // 322: sys_timerfd_create
+      6611,  // 320: sys_utimensat
+      5766,  // 321: sys_signalfd
+      6296,  // 322: sys_timerfd_create
       843,   // 323: sys_eventfd
       976,   // 324: sys_fallocate
-      6235,  // 325: sys_timerfd_settime
-      6193,  // 326: sys_timerfd_gettime
-      5669,  // 327: sys_signalfd4
+      6357,  // 325: sys_timerfd_settime
+      6315,  // 326: sys_timerfd_gettime
+      5779,  // 327: sys_signalfd4
       855,   // 328: sys_eventfd2
       726,   // 329: sys_epoll_create1
       700,   // 330: sys_dup3
@@ -1749,37 +1755,37 @@ struct SyscallTable_x86 {
       3316,  // 341: sys_name_to_handle_at
       3467,  // 342: sys_open_by_handle_at
       356,   // 343: sys_clock_adjtime
-      5959,  // 344: sys_syncfs
-      4999,  // 345: sys_sendmmsg
-      5299,  // 346: sys_setns
+      6069,  // 344: sys_syncfs
+      5109,  // 345: sys_sendmmsg
+      5409,  // 346: sys_setns
       3902,  // 347: sys_process_vm_readv
       3923,  // 348: sys_process_vm_writev
       2424,  // 349: sys_kcmp
       1162,  // 350: sys_finit_module
-      4781,  // 351: sys_sched_setattr
-      4640,  // 352: sys_sched_getattr
+      4891,  // 351: sys_sched_setattr
+      4750,  // 352: sys_sched_getattr
       4317,  // 353: sys_renameat2
-      4857,  // 354: sys_seccomp
+      4967,  // 354: sys_seccomp
       1859,  // 355: sys_getrandom
       2812,  // 356: sys_memfd_create
       241,   // 357: sys_bpf
       879,   // 358: sys_execveat
-      5743,  // 359: sys_socket
-      5769,  // 360: sys_socketpair
+      5853,  // 359: sys_socket
+      5879,  // 360: sys_socketpair
       232,   // 361: sys_bind
       605,   // 362: sys_connect
       2623,  // 363: sys_listen
       51,    // 364: sys_accept4
       1988,  // 365: sys_getsockopt
-      5478,  // 366: sys_setsockopt
+      5588,  // 366: sys_setsockopt
       1972,  // 367: sys_getsockname
       1768,  // 368: sys_getpeername
-      5024,  // 369: sys_sendto
-      5012,  // 370: sys_sendmsg
+      5134,  // 369: sys_sendto
+      5122,  // 370: sys_sendmsg
       4198,  // 371: sys_recvfrom
       4244,  // 372: sys_recvmsg
-      5602,  // 373: sys_shutdown
-      6453,  // 374: sys_userfaultfd
+      5712,  // 373: sys_shutdown
+      6575,  // 374: sys_userfaultfd
       2797,  // 375: sys_membarrier
       2930,  // 376: sys_mlock2
       617,   // 377: sys_copy_file_range
@@ -1788,7 +1794,7 @@ struct SyscallTable_x86 {
       3748,  // 380: sys_pkey_mprotect
       3719,  // 381: sys_pkey_alloc
       3734,  // 382: sys_pkey_free
-      5852,  // 383: sys_statx
+      5962,  // 383: sys_statx
       134,   // 384: sys_arch_prctl
       2226,  // 385: sys_io_pgetevents
       4377,  // 386: sys_rseq
@@ -1798,12 +1804,12 @@ struct SyscallTable_x86 {
       0,     // 390:
       0,     // 391:
       0,     // 392:
-      4904,  // 393: sys_semget
-      4893,  // 394: sys_semctl
-      5591,  // 395: sys_shmget
-      5570,  // 396: sys_shmctl
-      5560,  // 397: sys_shmat
-      5581,  // 398: sys_shmdt
+      5014,  // 393: sys_semget
+      5003,  // 394: sys_semctl
+      5701,  // 395: sys_shmget
+      5680,  // 396: sys_shmctl
+      5670,  // 397: sys_shmat
+      5691,  // 398: sys_shmdt
       3235,  // 399: sys_msgget
       3257,  // 400: sys_msgsnd
       3246,  // 401: sys_msgrcv
@@ -1813,11 +1819,11 @@ struct SyscallTable_x86 {
       374,   // 405: sys_clock_adjtime64
       411,   // 406: sys_clock_getres_time64
       493,   // 407: sys_clock_nanosleep_time64
-      6116,  // 408: sys_timer_gettime64
-      6154,  // 409: sys_timer_settime64
-      6213,  // 410: sys_timerfd_gettime64
-      6255,  // 411: sys_timerfd_settime64
-      6503,  // 412: sys_utimensat_time64
+      6226,  // 408: sys_timer_gettime64
+      6264,  // 409: sys_timer_settime64
+      6335,  // 410: sys_timerfd_gettime64
+      6377,  // 411: sys_timerfd_settime64
+      6625,  // 412: sys_utimensat_time64
       3978,  // 413: sys_pselect6_time64
       3785,  // 414: sys_ppoll_time64
       0,     // 415:
@@ -1825,10 +1831,10 @@ struct SyscallTable_x86 {
       4224,  // 417: sys_recvmmsg_time64
       3175,  // 418: sys_mq_timedsend_time64
       3131,  // 419: sys_mq_timedreceive_time64
-      4940,  // 420: sys_semtimedop_time64
+      5050,  // 420: sys_semtimedop_time64
       4515,  // 421: sys_rt_sigtimedwait_time64
       1443,  // 422: sys_futex_time64
-      4726,  // 423: sys_sched_rr_get_interval_time64
+      4836,  // 423: sys_sched_rr_get_interval_time64
       3663,  // 424: sys_pidfd_send_signal
       2337,  // 425: sys_io_uring_setup
       2296,  // 426: sys_io_uring_enter
@@ -1855,7 +1861,7 @@ struct SyscallTable_x86 {
       2829,  // 447: sys_memfd_secret
       3881,  // 448: sys_process_mrelease
       1475,  // 449: sys_futex_waitv
-      5053,  // 450: sys_set_mempolicy_home_node
+      5163,  // 450: sys_set_mempolicy_home_node
       267,   // 451: sys_cachestat
       1061,  // 452: sys_fchmodat2
       2766,  // 453: sys_map_shadow_stack
@@ -1869,10 +1875,10 @@ struct SyscallTable_x86_64 {
   static constexpr const char* names = kAllSyscalllNames;
   static constexpr SyscallTable::OffT offsets[]{
       4105,  // 0: sys_read
-      6636,  // 1: sys_write
+      6758,  // 1: sys_write
       3458,  // 2: sys_open
       579,   // 3: sys_close
-      5808,  // 4: sys_stat
+      5918,  // 4: sys_stat
       1291,  // 5: sys_fstat
       2732,  // 6: sys_lstat
       3766,  // 7: sys_poll
@@ -1888,54 +1894,54 @@ struct SyscallTable_x86_64 {
       3812,  // 17: sys_pread64
       4021,  // 18: sys_pwrite64
       4168,  // 19: sys_readv
-      6646,  // 20: sys_writev
+      6768,  // 20: sys_writev
       63,    // 21: sys_access
       3685,  // 22: sys_pipe
-      4882,  // 23: sys_select
-      4841,  // 24: sys_sched_yield
+      4992,  // 23: sys_select
+      4951,  // 24: sys_sched_yield
       3213,  // 25: sys_mremap
       3268,  // 26: sys_msync
       2864,  // 27: sys_mincore
       2754,  // 28: sys_madvise
-      5591,  // 29: sys_shmget
-      5560,  // 30: sys_shmat
-      5570,  // 31: sys_shmctl
+      5701,  // 29: sys_shmget
+      5670,  // 30: sys_shmat
+      5680,  // 31: sys_shmctl
       683,   // 32: sys_dup
       691,   // 33: sys_dup2
       3526,  // 34: sys_pause
       3338,  // 35: sys_nanosleep
       1754,  // 36: sys_getitimer
       124,   // 37: sys_alarm
-      5285,  // 38: sys_setitimer
+      5395,  // 38: sys_setitimer
       1808,  // 39: sys_getpid
-      4971,  // 40: sys_sendfile
-      5743,  // 41: sys_socket
+      5081,  // 40: sys_sendfile
+      5853,  // 41: sys_socket
       605,   // 42: sys_connect
       40,    // 43: sys_accept
-      5024,  // 44: sys_sendto
+      5134,  // 44: sys_sendto
       4198,  // 45: sys_recvfrom
-      5012,  // 46: sys_sendmsg
+      5122,  // 46: sys_sendmsg
       4244,  // 47: sys_recvmsg
-      5602,  // 48: sys_shutdown
+      5712,  // 48: sys_shutdown
       232,   // 49: sys_bind
       2623,  // 50: sys_listen
       1972,  // 51: sys_getsockname
       1768,  // 52: sys_getpeername
-      5769,  // 53: sys_socketpair
-      5478,  // 54: sys_setsockopt
+      5879,  // 53: sys_socketpair
+      5588,  // 54: sys_setsockopt
       1988,  // 55: sys_getsockopt
       558,   // 56: sys_clone
       1204,  // 57: sys_fork
-      6535,  // 58: sys_vfork
+      6657,  // 58: sys_vfork
       868,   // 59: sys_execve
       892,   // 60: sys_exit
-      6603,  // 61: sys_wait4
+      6725,  // 61: sys_wait4
       2479,  // 62: sys_kill
-      6396,  // 63: sys_uname
-      4904,  // 64: sys_semget
-      4915,  // 65: sys_semop
-      4893,  // 66: sys_semctl
-      5581,  // 67: sys_shmdt
+      6518,  // 63: sys_uname
+      5014,  // 64: sys_semget
+      5025,  // 65: sys_semop
+      5003,  // 66: sys_semctl
+      5691,  // 67: sys_shmdt
       3235,  // 68: sys_msgget
       3257,  // 69: sys_msgsnd
       3246,  // 70: sys_msgrcv
@@ -1944,7 +1950,7 @@ struct SyscallTable_x86_64 {
       1194,  // 73: sys_flock
       1365,  // 74: sys_fsync
       1134,  // 75: sys_fdatasync
-      6297,  // 76: sys_truncate
+      6419,  // 76: sys_truncate
       1385,  // 77: sys_ftruncate
       1620,  // 78: sys_getdents
       1609,  // 79: sys_getcwd
@@ -1955,43 +1961,43 @@ struct SyscallTable_x86_64 {
       4367,  // 84: sys_rmdir
       637,   // 85: sys_creat
       2603,  // 86: sys_link
-      6406,  // 87: sys_unlink
-      5904,  // 88: sys_symlink
+      6528,  // 87: sys_unlink
+      6014,  // 88: sys_symlink
       4140,  // 89: sys_readlink
       313,   // 90: sys_chmod
       1037,  // 91: sys_fchmod
       323,   // 92: sys_chown
       1075,  // 93: sys_fchown
       2565,  // 94: sys_lchown
-      6363,  // 95: sys_umask
+      6485,  // 95: sys_umask
       2014,  // 96: sys_gettimeofday
       1933,  // 97: sys_getrlimit
       1947,  // 98: sys_getrusage
-      5992,  // 99: sys_sysinfo
-      6277,  // 100: sys_times
+      6102,  // 99: sys_sysinfo
+      6399,  // 100: sys_times
       3998,  // 101: sys_ptrace
       2031,  // 102: sys_getuid
-      6004,  // 103: sys_syslog
+      6114,  // 103: sys_syslog
       1700,  // 104: sys_getgid
-      5510,  // 105: sys_setuid
-      5215,  // 106: sys_setgid
+      5620,  // 105: sys_setuid
+      5325,  // 106: sys_setgid
       1674,  // 107: sys_geteuid
       1648,  // 108: sys_getegid
-      5309,  // 109: sys_setpgid
+      5419,  // 109: sys_setpgid
       1831,  // 110: sys_getppid
       1796,  // 111: sys_getpgrp
-      5467,  // 112: sys_setsid
-      5425,  // 113: sys_setreuid
-      5337,  // 114: sys_setregid
+      5577,  // 112: sys_setsid
+      5535,  // 113: sys_setreuid
+      5447,  // 114: sys_setregid
       1724,  // 115: sys_getgroups
-      5239,  // 116: sys_setgroups
-      5395,  // 117: sys_setresuid
+      5349,  // 116: sys_setgroups
+      5505,  // 117: sys_setresuid
       1903,  // 118: sys_getresuid
-      5365,  // 119: sys_setresgid
+      5475,  // 119: sys_setresgid
       1873,  // 120: sys_getresgid
       1784,  // 121: sys_getpgid
-      5187,  // 122: sys_setfsuid
-      5159,  // 123: sys_setfsgid
+      5297,  // 122: sys_setfsuid
+      5269,  // 123: sys_setfsgid
       1961,  // 124: sys_getsid
       281,   // 125: sys_capget
       292,   // 126: sys_capset
@@ -1999,47 +2005,47 @@ struct SyscallTable_x86_64 {
       4495,  // 128: sys_rt_sigtimedwait
       4440,  // 129: sys_rt_sigqueueinfo
       4477,  // 130: sys_rt_sigsuspend
-      5629,  // 131: sys_sigaltstack
-      6479,  // 132: sys_utime
+      5739,  // 131: sys_sigaltstack
+      6601,  // 132: sys_utime
       2898,  // 133: sys_mknod
-      6442,  // 134: sys_uselib
+      6564,  // 134: sys_uselib
       3616,  // 135: sys_personality
-      6469,  // 136: sys_ustat
-      5828,  // 137: sys_statfs
+      6591,  // 136: sys_ustat
+      5938,  // 137: sys_statfs
       1339,  // 138: sys_fstatfs
-      5982,  // 139: sys_sysfs
+      6092,  // 139: sys_sysfs
       1843,  // 140: sys_getpriority
-      5321,  // 141: sys_setpriority
-      4799,  // 142: sys_sched_setparam
-      4658,  // 143: sys_sched_getparam
-      4818,  // 144: sys_sched_setscheduler
-      4677,  // 145: sys_sched_getscheduler
-      4564,  // 146: sys_sched_get_priority_max
-      4591,  // 147: sys_sched_get_priority_min
-      4700,  // 148: sys_sched_rr_get_interval
+      5431,  // 141: sys_setpriority
+      4909,  // 142: sys_sched_setparam
+      4768,  // 143: sys_sched_getparam
+      4928,  // 144: sys_sched_setscheduler
+      4787,  // 145: sys_sched_getscheduler
+      4674,  // 146: sys_sched_get_priority_max
+      4701,  // 147: sys_sched_get_priority_min
+      4810,  // 148: sys_sched_rr_get_interval
       2920,  // 149: sys_mlock
       3278,  // 150: sys_munlock
       2941,  // 151: sys_mlockall
       3290,  // 152: sys_munlockall
-      6545,  // 153: sys_vhangup
+      6667,  // 153: sys_vhangup
       2973,  // 154: sys_modify_ldt
       3704,  // 155: sys_pivot_root
       28,    // 156: sys__sysctl
       3802,  // 157: sys_prctl
       134,   // 158: sys_arch_prctl
       95,    // 159: sys_adjtimex
-      5453,  // 160: sys_setrlimit
+      5563,  // 160: sys_setrlimit
       345,   // 161: sys_chroot
-      5930,  // 162: sys_sync
+      6040,  // 162: sys_sync
       74,    // 163: sys_acct
-      5493,  // 164: sys_settimeofday
+      5603,  // 164: sys_settimeofday
       2988,  // 165: sys_mount
-      6384,  // 166: sys_umount2
-      5893,  // 167: sys_swapon
-      5881,  // 168: sys_swapoff
+      6506,  // 166: sys_umount2
+      6003,  // 167: sys_swapon
+      5991,  // 168: sys_swapoff
       4178,  // 169: sys_reboot
-      5269,  // 170: sys_sethostname
-      5141,  // 171: sys_setdomainname
+      5379,  // 170: sys_sethostname
+      5251,  // 171: sys_setdomainname
       2377,  // 172: sys_iopl
       2366,  // 173: sys_ioperm
       647,   // 174: sys_create_module
@@ -2052,11 +2058,11 @@ struct SyscallTable_x86_64 {
       1819,  // 181: sys_getpmsg
       4009,  // 182: sys_putpmsg
       108,   // 183: sys_afs_syscall
-      6325,  // 184: sys_tuxcall
-      4869,  // 185: sys_security
+      6447,  // 184: sys_tuxcall
+      4979,  // 185: sys_security
       2003,  // 186: sys_gettid
       4114,  // 187: sys_readahead
-      5534,  // 188: sys_setxattr
+      5644,  // 188: sys_setxattr
       2718,  // 189: sys_lsetxattr
       1243,  // 190: sys_fsetxattr
       2055,  // 191: sys_getxattr
@@ -2068,12 +2074,12 @@ struct SyscallTable_x86_64 {
       4277,  // 197: sys_removexattr
       2691,  // 198: sys_lremovexattr
       1213,  // 199: sys_fremovexattr
-      6287,  // 200: sys_tkill
-      6034,  // 201: sys_time
+      6409,  // 200: sys_tkill
+      6144,  // 201: sys_time
       1415,  // 202: sys_futex
-      4759,  // 203: sys_sched_setaffinity
-      4618,  // 204: sys_sched_getaffinity
-      5101,  // 205: sys_set_thread_area
+      4869,  // 203: sys_sched_setaffinity
+      4728,  // 204: sys_sched_getaffinity
+      5211,  // 205: sys_set_thread_area
       2269,  // 206: sys_io_setup
       2194,  // 207: sys_io_destroy
       2209,  // 208: sys_io_getevents
@@ -2086,15 +2092,15 @@ struct SyscallTable_x86_64 {
       824,   // 215: sys_epoll_wait_old
       4256,  // 216: sys_remap_file_pages
       1633,  // 217: sys_getdents64
-      5121,  // 218: sys_set_tid_address
+      5231,  // 218: sys_set_tid_address
       4347,  // 219: sys_restart_syscall
-      4925,  // 220: sys_semtimedop
+      5035,  // 220: sys_semtimedop
       945,   // 221: sys_fadvise64
-      6043,  // 222: sys_timer_create
-      6136,  // 223: sys_timer_settime
-      6098,  // 224: sys_timer_gettime
-      6077,  // 225: sys_timer_getoverrun
-      6060,  // 226: sys_timer_delete
+      6153,  // 222: sys_timer_create
+      6246,  // 223: sys_timer_settime
+      6208,  // 224: sys_timer_gettime
+      6187,  // 225: sys_timer_getoverrun
+      6170,  // 226: sys_timer_delete
       520,   // 227: sys_clock_settime
       435,   // 228: sys_clock_gettime
       394,   // 229: sys_clock_getres
@@ -2102,11 +2108,11 @@ struct SyscallTable_x86_64 {
       901,   // 231: sys_exit_group
       809,   // 232: sys_epoll_wait
       744,   // 233: sys_epoll_ctl
-      6023,  // 234: sys_tgkill
-      6524,  // 235: sys_utimes
-      6591,  // 236: sys_vserver
+      6133,  // 234: sys_tgkill
+      6646,  // 235: sys_utimes
+      6713,  // 236: sys_vserver
       2787,  // 237: sys_mbind
-      5035,  // 238: sys_set_mempolicy
+      5145,  // 238: sys_set_mempolicy
       1540,  // 239: sys_get_mempolicy
       3099,  // 240: sys_mq_open
       3199,  // 241: sys_mq_unlink
@@ -2115,7 +2121,7 @@ struct SyscallTable_x86_64 {
       3085,  // 244: sys_mq_notify
       3067,  // 245: sys_mq_getsetattr
       2453,  // 246: sys_kexec_load
-      6613,  // 247: sys_waitid
+      6735,  // 247: sys_waitid
       83,    // 248: sys_add_key
       4331,  // 249: sys_request_key
       2468,  // 250: sys_keyctl
@@ -2131,33 +2137,33 @@ struct SyscallTable_x86_64 {
       1099,  // 260: sys_fchownat
       1506,  // 261: sys_futimesat
       3352,  // 262: sys_newfstatat
-      6417,  // 263: sys_unlinkat
+      6539,  // 263: sys_unlinkat
       4304,  // 264: sys_renameat
       2612,  // 265: sys_linkat
-      5916,  // 266: sys_symlinkat
+      6026,  // 266: sys_symlinkat
       4153,  // 267: sys_readlinkat
       1048,  // 268: sys_fchmodat
       916,   // 269: sys_faccessat
       3965,  // 270: sys_pselect6
       3775,  // 271: sys_ppoll
-      6430,  // 272: sys_unshare
-      5081,  // 273: sys_set_robust_list
+      6552,  // 272: sys_unshare
+      5191,  // 273: sys_set_robust_list
       1558,  // 274: sys_get_robust_list
-      5784,  // 275: sys_splice
-      6015,  // 276: sys_tee
-      5939,  // 277: sys_sync_file_range
-      6578,  // 278: sys_vmsplice
+      5894,  // 275: sys_splice
+      6125,  // 276: sys_tee
+      6049,  // 277: sys_sync_file_range
+      6700,  // 278: sys_vmsplice
       3031,  // 279: sys_move_pages
-      6489,  // 280: sys_utimensat
+      6611,  // 280: sys_utimensat
       776,   // 281: sys_epoll_pwait
-      5656,  // 282: sys_signalfd
-      6174,  // 283: sys_timerfd_create
+      5766,  // 282: sys_signalfd
+      6296,  // 283: sys_timerfd_create
       843,   // 284: sys_eventfd
       976,   // 285: sys_fallocate
-      6235,  // 286: sys_timerfd_settime
-      6193,  // 287: sys_timerfd_gettime
+      6357,  // 286: sys_timerfd_settime
+      6315,  // 287: sys_timerfd_gettime
       51,    // 288: sys_accept4
-      5669,  // 289: sys_signalfd4
+      5779,  // 289: sys_signalfd4
       855,   // 290: sys_eventfd2
       726,   // 291: sys_epoll_create1
       700,   // 292: sys_dup3
@@ -2174,24 +2180,24 @@ struct SyscallTable_x86_64 {
       3316,  // 303: sys_name_to_handle_at
       3467,  // 304: sys_open_by_handle_at
       356,   // 305: sys_clock_adjtime
-      5959,  // 306: sys_syncfs
-      4999,  // 307: sys_sendmmsg
-      5299,  // 308: sys_setns
+      6069,  // 306: sys_syncfs
+      5109,  // 307: sys_sendmmsg
+      5409,  // 308: sys_setns
       1598,  // 309: sys_getcpu
       3902,  // 310: sys_process_vm_readv
       3923,  // 311: sys_process_vm_writev
       2424,  // 312: sys_kcmp
       1162,  // 313: sys_finit_module
-      4781,  // 314: sys_sched_setattr
-      4640,  // 315: sys_sched_getattr
+      4891,  // 314: sys_sched_setattr
+      4750,  // 315: sys_sched_getattr
       4317,  // 316: sys_renameat2
-      4857,  // 317: sys_seccomp
+      4967,  // 317: sys_seccomp
       1859,  // 318: sys_getrandom
       2812,  // 319: sys_memfd_create
       2433,  // 320: sys_kexec_file_load
       241,   // 321: sys_bpf
       879,   // 322: sys_execveat
-      6453,  // 323: sys_userfaultfd
+      6575,  // 323: sys_userfaultfd
       2797,  // 324: sys_membarrier
       2930,  // 325: sys_mlock2
       617,   // 326: sys_copy_file_range
@@ -2200,7 +2206,7 @@ struct SyscallTable_x86_64 {
       3748,  // 329: sys_pkey_mprotect
       3719,  // 330: sys_pkey_alloc
       3734,  // 331: sys_pkey_free
-      5852,  // 332: sys_statx
+      5962,  // 332: sys_statx
       2226,  // 333: sys_io_pgetevents
       4377,  // 334: sys_rseq
       0,     // 335:
@@ -2318,7 +2324,7 @@ struct SyscallTable_x86_64 {
       2829,  // 447: sys_memfd_secret
       3881,  // 448: sys_process_mrelease
       1475,  // 449: sys_futex_waitv
-      5053,  // 450: sys_set_mempolicy_home_node
+      5163,  // 450: sys_set_mempolicy_home_node
       267,   // 451: sys_cachestat
       1061,  // 452: sys_fchmodat2
       2766,  // 453: sys_map_shadow_stack
@@ -2384,38 +2390,495 @@ struct SyscallTable_x86_64 {
       4460,  // 513: sys_rt_sigreturn
       2356,  // 514: sys_ioctl
       4168,  // 515: sys_readv
-      6646,  // 516: sys_writev
+      6768,  // 516: sys_writev
       4198,  // 517: sys_recvfrom
-      5012,  // 518: sys_sendmsg
+      5122,  // 518: sys_sendmsg
       4244,  // 519: sys_recvmsg
       868,   // 520: sys_execve
       3998,  // 521: sys_ptrace
       4403,  // 522: sys_rt_sigpending
       4495,  // 523: sys_rt_sigtimedwait
       4440,  // 524: sys_rt_sigqueueinfo
-      5629,  // 525: sys_sigaltstack
-      6043,  // 526: sys_timer_create
+      5739,  // 525: sys_sigaltstack
+      6153,  // 526: sys_timer_create
       3085,  // 527: sys_mq_notify
       2453,  // 528: sys_kexec_load
-      6613,  // 529: sys_waitid
-      5081,  // 530: sys_set_robust_list
+      6735,  // 529: sys_waitid
+      5191,  // 530: sys_set_robust_list
       1558,  // 531: sys_get_robust_list
-      6578,  // 532: sys_vmsplice
+      6700,  // 532: sys_vmsplice
       3031,  // 533: sys_move_pages
       3824,  // 534: sys_preadv
       4034,  // 535: sys_pwritev
       4542,  // 536: sys_rt_tgsigqueueinfo
       4211,  // 537: sys_recvmmsg
-      4999,  // 538: sys_sendmmsg
+      5109,  // 538: sys_sendmmsg
       3902,  // 539: sys_process_vm_readv
       3923,  // 540: sys_process_vm_writev
-      5478,  // 541: sys_setsockopt
+      5588,  // 541: sys_setsockopt
       1988,  // 542: sys_getsockopt
       2269,  // 543: sys_io_setup
       2282,  // 544: sys_io_submit
       879,   // 545: sys_execveat
       3835,  // 546: sys_preadv2
       4046,  // 547: sys_pwritev2
+  };
+};
+
+struct SyscallTable_s390x {
+  static constexpr const char* names = kAllSyscalllNames;
+  static constexpr SyscallTable::OffT offsets[]{
+      0,     // 0:
+      892,   // 1: sys_exit
+      1204,  // 2: sys_fork
+      4105,  // 3: sys_read
+      6758,  // 4: sys_write
+      3458,  // 5: sys_open
+      579,   // 6: sys_close
+      4347,  // 7: sys_restart_syscall
+      637,   // 8: sys_creat
+      2603,  // 9: sys_link
+      6528,  // 10: sys_unlink
+      868,   // 11: sys_execve
+      303,   // 12: sys_chdir
+      0,     // 13:
+      2898,  // 14: sys_mknod
+      313,   // 15: sys_chmod
+      0,     // 16:
+      0,     // 17:
+      0,     // 18:
+      2708,  // 19: sys_lseek
+      1808,  // 20: sys_getpid
+      2988,  // 21: sys_mount
+      6495,  // 22: sys_umount
+      0,     // 23:
+      0,     // 24:
+      0,     // 25:
+      3998,  // 26: sys_ptrace
+      124,   // 27: sys_alarm
+      0,     // 28:
+      3526,  // 29: sys_pause
+      6601,  // 30: sys_utime
+      0,     // 31:
+      0,     // 32:
+      63,    // 33: sys_access
+      3382,  // 34: sys_nice
+      0,     // 35:
+      6040,  // 36: sys_sync
+      2479,  // 37: sys_kill
+      4293,  // 38: sys_rename
+      2876,  // 39: sys_mkdir
+      4367,  // 40: sys_rmdir
+      683,   // 41: sys_dup
+      3685,  // 42: sys_pipe
+      6399,  // 43: sys_times
+      0,     // 44:
+      259,   // 45: sys_brk
+      0,     // 46:
+      0,     // 47:
+      5755,  // 48: sys_signal
+      0,     // 49:
+      0,     // 50:
+      74,    // 51: sys_acct
+      6506,  // 52: sys_umount2
+      0,     // 53:
+      2356,  // 54: sys_ioctl
+      1112,  // 55: sys_fcntl
+      0,     // 56:
+      5419,  // 57: sys_setpgid
+      0,     // 58:
+      0,     // 59:
+      6485,  // 60: sys_umask
+      345,   // 61: sys_chroot
+      6591,  // 62: sys_ustat
+      691,   // 63: sys_dup2
+      1831,  // 64: sys_getppid
+      1796,  // 65: sys_getpgrp
+      5577,  // 66: sys_setsid
+      5725,  // 67: sys_sigaction
+      0,     // 68:
+      0,     // 69:
+      0,     // 70:
+      0,     // 71:
+      5838,  // 72: sys_sigsuspend
+      5793,  // 73: sys_sigpending
+      5379,  // 74: sys_sethostname
+      5563,  // 75: sys_setrlimit
+      0,     // 76:
+      1947,  // 77: sys_getrusage
+      2014,  // 78: sys_gettimeofday
+      5603,  // 79: sys_settimeofday
+      0,     // 80:
+      0,     // 81:
+      0,     // 82:
+      6014,  // 83: sys_symlink
+      0,     // 84:
+      4140,  // 85: sys_readlink
+      6564,  // 86: sys_uselib
+      6003,  // 87: sys_swapon
+      4178,  // 88: sys_reboot
+      4128,  // 89: sys_readdir
+      2954,  // 90: sys_mmap
+      3305,  // 91: sys_munmap
+      6419,  // 92: sys_truncate
+      1385,  // 93: sys_ftruncate
+      1037,  // 94: sys_fchmod
+      0,     // 95:
+      1843,  // 96: sys_getpriority
+      5431,  // 97: sys_setpriority
+      0,     // 98:
+      5938,  // 99: sys_statfs
+      1339,  // 100: sys_fstatfs
+      0,     // 101:
+      5864,  // 102: sys_socketcall
+      6114,  // 103: sys_syslog
+      5395,  // 104: sys_setitimer
+      1754,  // 105: sys_getitimer
+      5918,  // 106: sys_stat
+      2732,  // 107: sys_lstat
+      1291,  // 108: sys_fstat
+      0,     // 109:
+      2672,  // 110: sys_lookup_dcookie
+      6667,  // 111: sys_vhangup
+      2077,  // 112: sys_idle
+      0,     // 113:
+      6725,  // 114: sys_wait4
+      5991,  // 115: sys_swapoff
+      6102,  // 116: sys_sysinfo
+      2416,  // 117: sys_ipc
+      1365,  // 118: sys_fsync
+      5824,  // 119: sys_sigreturn
+      558,   // 120: sys_clone
+      5251,  // 121: sys_setdomainname
+      6518,  // 122: sys_uname
+      0,     // 123:
+      95,    // 124: sys_adjtimex
+      3046,  // 125: sys_mprotect
+      5808,  // 126: sys_sigprocmask
+      647,   // 127: sys_create_module
+      2086,  // 128: sys_init_module
+      665,   // 129: sys_delete_module
+      1520,  // 130: sys_get_kernel_syms
+      4076,  // 131: sys_quotactl
+      1784,  // 132: sys_getpgid
+      1026,  // 133: sys_fchdir
+      220,   // 134: sys_bdflush
+      6092,  // 135: sys_sysfs
+      3616,  // 136: sys_personality
+      108,   // 137: sys_afs_syscall
+      0,     // 138:
+      0,     // 139:
+      0,     // 140:
+      1620,  // 141: sys_getdents
+      4992,  // 142: sys_select
+      1194,  // 143: sys_flock
+      3268,  // 144: sys_msync
+      4168,  // 145: sys_readv
+      6768,  // 146: sys_writev
+      1961,  // 147: sys_getsid
+      1134,  // 148: sys_fdatasync
+      28,    // 149: sys__sysctl
+      2920,  // 150: sys_mlock
+      3278,  // 151: sys_munlock
+      2941,  // 152: sys_mlockall
+      3290,  // 153: sys_munlockall
+      4909,  // 154: sys_sched_setparam
+      4768,  // 155: sys_sched_getparam
+      4928,  // 156: sys_sched_setscheduler
+      4787,  // 157: sys_sched_getscheduler
+      4951,  // 158: sys_sched_yield
+      4674,  // 159: sys_sched_get_priority_max
+      4701,  // 160: sys_sched_get_priority_min
+      4810,  // 161: sys_sched_rr_get_interval
+      3338,  // 162: sys_nanosleep
+      3213,  // 163: sys_mremap
+      0,     // 164:
+      0,     // 165:
+      0,     // 166:
+      4059,  // 167: sys_query_module
+      3766,  // 168: sys_poll
+      3367,  // 169: sys_nfsservctl
+      0,     // 170:
+      0,     // 171:
+      3802,  // 172: sys_prctl
+      4460,  // 173: sys_rt_sigreturn
+      4386,  // 174: sys_rt_sigaction
+      4421,  // 175: sys_rt_sigprocmask
+      4403,  // 176: sys_rt_sigpending
+      4495,  // 177: sys_rt_sigtimedwait
+      4440,  // 178: sys_rt_sigqueueinfo
+      4477,  // 179: sys_rt_sigsuspend
+      3812,  // 180: sys_pread64
+      4021,  // 181: sys_pwrite64
+      0,     // 182:
+      1609,  // 183: sys_getcwd
+      281,   // 184: sys_capget
+      292,   // 185: sys_capset
+      5739,  // 186: sys_sigaltstack
+      5081,  // 187: sys_sendfile
+      1819,  // 188: sys_getpmsg
+      4009,  // 189: sys_putpmsg
+      6657,  // 190: sys_vfork
+      1933,  // 191: sys_getrlimit
+      0,     // 192:
+      0,     // 193:
+      0,     // 194:
+      0,     // 195:
+      0,     // 196:
+      0,     // 197:
+      2565,  // 198: sys_lchown
+      2031,  // 199: sys_getuid
+      1700,  // 200: sys_getgid
+      1674,  // 201: sys_geteuid
+      1648,  // 202: sys_getegid
+      5535,  // 203: sys_setreuid
+      5447,  // 204: sys_setregid
+      1724,  // 205: sys_getgroups
+      5349,  // 206: sys_setgroups
+      1075,  // 207: sys_fchown
+      5505,  // 208: sys_setresuid
+      1903,  // 209: sys_getresuid
+      5475,  // 210: sys_setresgid
+      1873,  // 211: sys_getresgid
+      323,   // 212: sys_chown
+      5620,  // 213: sys_setuid
+      5325,  // 214: sys_setgid
+      5297,  // 215: sys_setfsuid
+      5269,  // 216: sys_setfsgid
+      3704,  // 217: sys_pivot_root
+      2864,  // 218: sys_mincore
+      2754,  // 219: sys_madvise
+      1633,  // 220: sys_getdents64
+      0,     // 221:
+      4114,  // 222: sys_readahead
+      0,     // 223:
+      5644,  // 224: sys_setxattr
+      2718,  // 225: sys_lsetxattr
+      1243,  // 226: sys_fsetxattr
+      2055,  // 227: sys_getxattr
+      2589,  // 228: sys_lgetxattr
+      1148,  // 229: sys_fgetxattr
+      2634,  // 230: sys_listxattr
+      2648,  // 231: sys_llistxattr
+      1179,  // 232: sys_flistxattr
+      4277,  // 233: sys_removexattr
+      2691,  // 234: sys_lremovexattr
+      1213,  // 235: sys_fremovexattr
+      2003,  // 236: sys_gettid
+      6409,  // 237: sys_tkill
+      1415,  // 238: sys_futex
+      4869,  // 239: sys_sched_setaffinity
+      4728,  // 240: sys_sched_getaffinity
+      6133,  // 241: sys_tgkill
+      0,     // 242:
+      2269,  // 243: sys_io_setup
+      2194,  // 244: sys_io_destroy
+      2209,  // 245: sys_io_getevents
+      2282,  // 246: sys_io_submit
+      2180,  // 247: sys_io_cancel
+      901,   // 248: sys_exit_group
+      709,   // 249: sys_epoll_create
+      744,   // 250: sys_epoll_ctl
+      809,   // 251: sys_epoll_wait
+      5231,  // 252: sys_set_tid_address
+      945,   // 253: sys_fadvise64
+      6153,  // 254: sys_timer_create
+      6246,  // 255: sys_timer_settime
+      6208,  // 256: sys_timer_gettime
+      6187,  // 257: sys_timer_getoverrun
+      6170,  // 258: sys_timer_delete
+      520,   // 259: sys_clock_settime
+      435,   // 260: sys_clock_gettime
+      394,   // 261: sys_clock_getres
+      473,   // 262: sys_clock_nanosleep
+      0,     // 263:
+      0,     // 264:
+      5949,  // 265: sys_statfs64
+      1351,  // 266: sys_fstatfs64
+      4256,  // 267: sys_remap_file_pages
+      2787,  // 268: sys_mbind
+      1540,  // 269: sys_get_mempolicy
+      5145,  // 270: sys_set_mempolicy
+      3099,  // 271: sys_mq_open
+      3199,  // 272: sys_mq_unlink
+      3158,  // 273: sys_mq_timedsend
+      3111,  // 274: sys_mq_timedreceive
+      3085,  // 275: sys_mq_notify
+      3067,  // 276: sys_mq_getsetattr
+      2453,  // 277: sys_kexec_load
+      83,    // 278: sys_add_key
+      4331,  // 279: sys_request_key
+      2468,  // 280: sys_keyctl
+      6735,  // 281: sys_waitid
+      2401,  // 282: sys_ioprio_set
+      2386,  // 283: sys_ioprio_get
+      2124,  // 284: sys_inotify_init
+      2102,  // 285: sys_inotify_add_watch
+      2159,  // 286: sys_inotify_rm_watch
+      2846,  // 287: sys_migrate_pages
+      3503,  // 288: sys_openat
+      2886,  // 289: sys_mkdirat
+      2908,  // 290: sys_mknodat
+      1099,  // 291: sys_fchownat
+      1506,  // 292: sys_futimesat
+      3352,  // 293: sys_newfstatat
+      6539,  // 294: sys_unlinkat
+      4304,  // 295: sys_renameat
+      2612,  // 296: sys_linkat
+      6026,  // 297: sys_symlinkat
+      4153,  // 298: sys_readlinkat
+      1048,  // 299: sys_fchmodat
+      916,   // 300: sys_faccessat
+      3965,  // 301: sys_pselect6
+      3775,  // 302: sys_ppoll
+      6552,  // 303: sys_unshare
+      5191,  // 304: sys_set_robust_list
+      1558,  // 305: sys_get_robust_list
+      5894,  // 306: sys_splice
+      6049,  // 307: sys_sync_file_range
+      6125,  // 308: sys_tee
+      6700,  // 309: sys_vmsplice
+      3031,  // 310: sys_move_pages
+      1598,  // 311: sys_getcpu
+      776,   // 312: sys_epoll_pwait
+      6646,  // 313: sys_utimes
+      976,   // 314: sys_fallocate
+      6611,  // 315: sys_utimensat
+      5766,  // 316: sys_signalfd
+      6284,  // 317: sys_timerfd
+      843,   // 318: sys_eventfd
+      6296,  // 319: sys_timerfd_create
+      6357,  // 320: sys_timerfd_settime
+      6315,  // 321: sys_timerfd_gettime
+      5779,  // 322: sys_signalfd4
+      855,   // 323: sys_eventfd2
+      2141,  // 324: sys_inotify_init1
+      3694,  // 325: sys_pipe2
+      700,   // 326: sys_dup3
+      726,   // 327: sys_epoll_create1
+      3824,  // 328: sys_preadv
+      4034,  // 329: sys_pwritev
+      4542,  // 330: sys_rt_tgsigqueueinfo
+      3596,  // 331: sys_perf_event_open
+      990,   // 332: sys_fanotify_init
+      1008,  // 333: sys_fanotify_mark
+      3847,  // 334: sys_prlimit64
+      3316,  // 335: sys_name_to_handle_at
+      3467,  // 336: sys_open_by_handle_at
+      356,   // 337: sys_clock_adjtime
+      6069,  // 338: sys_syncfs
+      5409,  // 339: sys_setns
+      3902,  // 340: sys_process_vm_readv
+      3923,  // 341: sys_process_vm_writev
+      4636,  // 342: sys_s390_runtime_instr
+      2424,  // 343: sys_kcmp
+      1162,  // 344: sys_finit_module
+      4891,  // 345: sys_sched_setattr
+      4750,  // 346: sys_sched_getattr
+      4317,  // 347: sys_renameat2
+      4967,  // 348: sys_seccomp
+      1859,  // 349: sys_getrandom
+      2812,  // 350: sys_memfd_create
+      241,   // 351: sys_bpf
+      4612,  // 352: sys_s390_pci_mmio_write
+      4589,  // 353: sys_s390_pci_mmio_read
+      879,   // 354: sys_execveat
+      6575,  // 355: sys_userfaultfd
+      2797,  // 356: sys_membarrier
+      4211,  // 357: sys_recvmmsg
+      5109,  // 358: sys_sendmmsg
+      5853,  // 359: sys_socket
+      5879,  // 360: sys_socketpair
+      232,   // 361: sys_bind
+      605,   // 362: sys_connect
+      2623,  // 363: sys_listen
+      51,    // 364: sys_accept4
+      1988,  // 365: sys_getsockopt
+      5588,  // 366: sys_setsockopt
+      1972,  // 367: sys_getsockname
+      1768,  // 368: sys_getpeername
+      5134,  // 369: sys_sendto
+      5122,  // 370: sys_sendmsg
+      4198,  // 371: sys_recvfrom
+      4244,  // 372: sys_recvmsg
+      5712,  // 373: sys_shutdown
+      2930,  // 374: sys_mlock2
+      617,   // 375: sys_copy_file_range
+      3835,  // 376: sys_preadv2
+      4046,  // 377: sys_pwritev2
+      4564,  // 378: sys_s390_guarded_storage
+      5962,  // 379: sys_statx
+      4659,  // 380: sys_s390_sthyi
+      2433,  // 381: sys_kexec_file_load
+      2226,  // 382: sys_io_pgetevents
+      4377,  // 383: sys_rseq
+      3748,  // 384: sys_pkey_mprotect
+      3719,  // 385: sys_pkey_alloc
+      3734,  // 386: sys_pkey_free
+      0,     // 387:
+      0,     // 388:
+      0,     // 389:
+      0,     // 390:
+      0,     // 391:
+      5035,  // 392: sys_semtimedop
+      5014,  // 393: sys_semget
+      5003,  // 394: sys_semctl
+      5701,  // 395: sys_shmget
+      5680,  // 396: sys_shmctl
+      5670,  // 397: sys_shmat
+      5691,  // 398: sys_shmdt
+      3235,  // 399: sys_msgget
+      3257,  // 400: sys_msgsnd
+      3246,  // 401: sys_msgrcv
+      3224,  // 402: sys_msgctl
+      0,     // 403:
+      0,     // 404:
+      0,     // 405:
+      0,     // 406:
+      0,     // 407:
+      0,     // 408:
+      0,     // 409:
+      0,     // 410:
+      0,     // 411:
+      0,     // 412:
+      0,     // 413:
+      0,     // 414:
+      0,     // 415:
+      0,     // 416:
+      0,     // 417:
+      0,     // 418:
+      0,     // 419:
+      0,     // 420:
+      0,     // 421:
+      0,     // 422:
+      0,     // 423:
+      3663,  // 424: sys_pidfd_send_signal
+      2337,  // 425: sys_io_uring_setup
+      2296,  // 426: sys_io_uring_enter
+      2315,  // 427: sys_io_uring_register
+      3489,  // 428: sys_open_tree
+      3016,  // 429: sys_move_mount
+      1269,  // 430: sys_fsopen
+      1230,  // 431: sys_fsconfig
+      1257,  // 432: sys_fsmount
+      1280,  // 433: sys_fspick
+      3648,  // 434: sys_pidfd_open
+      568,   // 435: sys_clone3
+      589,   // 436: sys_close_range
+      3514,  // 437: sys_openat2
+      3632,  // 438: sys_pidfd_getfd
+      930,   // 439: sys_faccessat2
+      3861,  // 440: sys_process_madvise
+      792,   // 441: sys_epoll_pwait2
+      2998,  // 442: sys_mount_setattr
+      4089,  // 443: sys_quotactl_fd
+      2510,  // 444: sys_landlock_create_ruleset
+      2488,  // 445: sys_landlock_add_rule
+      2538,  // 446: sys_landlock_restrict_self
+      0,     // 447:
+      3881,  // 448: sys_process_mrelease
+      1475,  // 449: sys_futex_waitv
+      5163,  // 450: sys_set_mempolicy_home_node
   };
 };
 
