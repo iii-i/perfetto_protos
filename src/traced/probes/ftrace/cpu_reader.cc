@@ -596,21 +596,26 @@ std::optional<CpuReader::PageHeader> CpuReader::ParsePageHeader(
 
   uint32_t size_and_flags;
 
-  // On little endian, we can just read a uint32_t and reject the rest of the
-  // number later.
+  // Reject upper bits, if applicable. On 32-bit, size_bytes - 4 will
+  // evaluate to 0 and this will be a no-op. On 64-bit, this will advance by 4
+  // bytes.
+  if (!PERFETTO_IS_LITTLE_ENDIAN()) {
+    PERFETTO_DCHECK(page_header_size_len >= 4);
+    *ptr += page_header_size_len - 4;
+  }
+
   if (!CpuReader::ReadAndAdvance<uint32_t>(
-          ptr, end_of_page, base::AssumeLittleEndian(&size_and_flags)))
+          ptr, end_of_page, &size_and_flags))
     return std::nullopt;
 
   page_header.size = size_and_flags & kDataSizeMask;
   page_header.lost_events = bool(size_and_flags & kMissedEventsFlag);
   PERFETTO_DCHECK(page_header.size <= base::GetSysPageSize());
 
-  // Reject rest of the number, if applicable. On 32-bit, size_bytes - 4 will
-  // evaluate to 0 and this will be a no-op. On 64-bit, this will advance by 4
-  // bytes.
-  PERFETTO_DCHECK(page_header_size_len >= 4);
-  *ptr += page_header_size_len - 4;
+  if (PERFETTO_IS_LITTLE_ENDIAN()) {
+    PERFETTO_DCHECK(page_header_size_len >= 4);
+    *ptr += page_header_size_len - 4;
+  }
 
   return std::make_optional(page_header);
 }
@@ -938,8 +943,12 @@ bool CpuReader::ParseField(const Field& field,
       // should avoid making things worse by corrupting the stack but we
       // don't need to handle it correctly.
       size_t size = std::min<size_t>(field.ftrace_size, sizeof(n));
-      memcpy(base::AssumeLittleEndian(&n),
-             reinterpret_cast<const void*>(field_start), size);
+      if (PERFETTO_IS_LITTLE_ENDIAN()) {
+        memcpy(&n, reinterpret_cast<const void*>(field_start), size);
+      } else {
+        memcpy(reinterpret_cast<char *>(&n) + (sizeof(uint64_t) - size),
+               reinterpret_cast<const void*>(field_start), size);
+      }
       // Look up the address in the printk format map and write it into the
       // proto.
       base::StringView name = table->LookupTraceString(n);
