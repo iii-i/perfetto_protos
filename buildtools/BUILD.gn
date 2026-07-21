@@ -2020,6 +2020,41 @@ source_set("libunwindstack") {
   public_configs = [ ":libunwindstack_config" ]
 }
 
+# The subset of libunwindstack's own unit tests that builds outside Android.
+executable("libunwindstack_unittests") {
+  testonly = true
+  configs -= [ "//gn/standalone:extra_warnings" ]
+
+  # Let LogFake.cpp override the statically linked liblog.
+  ldflags = [ "-Wl,--allow-multiple-definition" ]
+  include_dirs = [
+    "android-unwinding/libunwindstack/include",
+    "android-unwinding/libunwindstack",
+    "android-unwinding/libunwindstack/utils",
+    "android-unwinding/libunwindstack/tests",
+    "android-libbase/include",
+    "android-logging/liblog/include",
+    "android-libprocinfo/include",
+    "android-core/include",
+  ]
+  deps = [
+    ":gmock",
+    ":gtest",
+    ":gtest_main",
+    ":libunwindstack",
+    "//gn:default_deps",
+  ]
+  sources = [
+    "android-unwinding/libunwindstack/LogAndroid.cpp",
+    "android-unwinding/libunwindstack/tests/DwarfSectionImplTest.cpp",
+    "android-unwinding/libunwindstack/tests/ElfFake.cpp",
+    "android-unwinding/libunwindstack/tests/ElfTestUtils.cpp",
+    "android-unwinding/libunwindstack/tests/LogFake.cpp",
+    "android-unwinding/libunwindstack/tests/RegsTest.cpp",
+    "android-unwinding/libunwindstack/utils/MemoryFake.cpp",
+  ]
+}
+
 config("bionic_kernel_uapi_headers") {
   visibility = _buildtools_visibility
   cflags = [
