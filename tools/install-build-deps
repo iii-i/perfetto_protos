@@ -279,7 +279,7 @@ BUILD_DEPS_HOST = [
     Dependency(
         'buildtools/android-unwinding',
         'https://android.googlesource.com/platform/system/unwinding.git',
-        '4b59ea8471e89d01300481a92de3230b79b6d7c7', 'all', 'all'),
+        'ee9639d9d673d1d2dc099ae8ab61961595070d45', 'all', 'all'),
     Dependency('buildtools/android-logging',
                'https://android.googlesource.com/platform/system/logging.git',
                '7b36b566c9113fc703d68f76e8f40c0c2432481c', 'all', 'all'),
@@ -711,6 +711,9 @@ def RmtreeIfExists(path):
 
 
 def CheckoutGitRepo(path, git_url, revision, check_only):
+  if os.path.islink(path):
+    # A symlink means the dep is provided from a local checkout.
+    return False
   if IsGitRepoCheckoutOutAtRevision(path, revision):
     return False
   if check_only:
