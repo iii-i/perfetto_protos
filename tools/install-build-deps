@@ -279,7 +279,7 @@ BUILD_DEPS_HOST = [
     Dependency(
         'buildtools/android-unwinding',
         'https://android.googlesource.com/platform/system/unwinding.git',
-        'ee9639d9d673d1d2dc099ae8ab61961595070d45', 'all', 'all'),
+        '91db55920bcb1ebc1584f7b4bbd6045137dacf68', 'all', 'all'),
     Dependency('buildtools/android-logging',
                'https://android.googlesource.com/platform/system/logging.git',
                '7b36b566c9113fc703d68f76e8f40c0c2432481c', 'all', 'all'),
@@ -570,8 +570,8 @@ BUILD_DEPS_LINUX_CROSS_SYSROOTS_ARM = [
 BUILD_DEPS_LINUX_CROSS_SYSROOTS_S390X = [
     Dependency(
         'buildtools/debian_bullseye_s390x-sysroot.tgz',
-        'file:///home/iii/debian_bullseye_s390x_sysroot.tar.xz',
-        'ea46c61ad4c481d8e00a6a3da43a5d8ac9e1a00209d1b56b48f25eac7d7828ca',
+        'https://commondatastorage.googleapis.com/chrome-linux-sysroot/46d561a32665a7ef4db334d66ba10b0db7750eea3fed1fee4896c2f5c4f87167',
+        '46d561a32665a7ef4db334d66ba10b0db7750eea3fed1fee4896c2f5c4f87167',
         'linux', 'all'),
 ]
 
