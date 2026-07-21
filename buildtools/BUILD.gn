@@ -2008,6 +2008,49 @@ source_set("libunwindstack") {
   public_configs = [ ":libunwindstack_config" ]
 }
 
+# A curated subset of libunwindstack's own upstream unit tests, buildable
+# standalone (in particular cross-compiled to s390x) to validate the arch
+# port against the library's own tests. Excludes the Android/bionic-only
+# tests (dex, MTE, ptrace, local/remote, bionic-termination).
+executable("libunwindstack_unittests") {
+  testonly = true
+  configs -= [ "//gn/standalone:extra_warnings" ]
+
+  # LogFake.cpp reimplements __android_log_* to capture logs; upstream relies on
+  # liblog being a shared lib so the fakes override it. Here liblog is linked
+  # statically into libunwindstack, so let the test's fakes (linked first) win.
+  # LogAndroid.cpp (below) routes Log::Info through __android_log_* so the fakes
+  # can see it; the library itself is built with LogStdout.cpp, which the tests
+  # cannot intercept.
+  ldflags = [ "-Wl,--allow-multiple-definition" ]
+  include_dirs = [
+    "android-unwinding/libunwindstack/include",
+    "android-unwinding/libunwindstack",
+    "android-unwinding/libunwindstack/utils",
+    "android-unwinding/libunwindstack/tests",
+    "android-libbase/include",
+    "android-logging/liblog/include",
+    "android-libprocinfo/include",
+    "android-core/include",
+  ]
+  deps = [
+    ":gmock",
+    ":gtest",
+    ":gtest_main",
+    ":libunwindstack",
+    "//gn:default_deps",
+  ]
+  sources = [
+    "android-unwinding/libunwindstack/LogAndroid.cpp",
+    "android-unwinding/libunwindstack/tests/DwarfSectionImplTest.cpp",
+    "android-unwinding/libunwindstack/tests/ElfFake.cpp",
+    "android-unwinding/libunwindstack/tests/ElfTestUtils.cpp",
+    "android-unwinding/libunwindstack/tests/LogFake.cpp",
+    "android-unwinding/libunwindstack/tests/RegsTest.cpp",
+    "android-unwinding/libunwindstack/utils/MemoryFake.cpp",
+  ]
+}
+
 config("bionic_kernel_uapi_headers") {
   visibility = _buildtools_visibility
   cflags = [
