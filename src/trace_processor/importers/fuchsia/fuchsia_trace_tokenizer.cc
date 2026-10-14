@@ -24,6 +24,7 @@
 #include <string>
 #include <utility>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
 #include "perfetto/ext/base/string_view.h"
@@ -53,6 +54,11 @@ namespace perfetto::trace_processor {
 namespace {
 
 using fuchsia_trace_utils::ArgValue;
+
+constexpr char kMagic[] = {'\x10', '\x00', '\x04', '\x46',
+                           '\x78', '\x54', '\x16', '\x00'};
+constexpr char kMagicBigEndian[] = {'\x00', '\x16', '\x54', '\x78',
+                                    '\x46', '\x04', '\x00', '\x10'};
 
 // Record types
 constexpr uint32_t kMetadata = 0;
@@ -134,8 +140,7 @@ base::Status FuchsiaTraceTokenizer::Parse(TraceBlobView blob) {
       size -= needed_bytes;
     }
     // Read the record length from the header.
-    uint64_t header =
-        *reinterpret_cast<const uint64_t*>(leftover_bytes_.data());
+    uint64_t header = ReadHeader(leftover_bytes_.data());
     uint32_t record_len_words =
         fuchsia_trace_utils::ReadField<uint32_t>(header, 4, 15);
     uint32_t record_len_bytes = record_len_words * sizeof(uint64_t);
@@ -175,8 +180,7 @@ base::Status FuchsiaTraceTokenizer::Parse(TraceBlobView blob) {
   // size-8]. Any larger offset means we don't have enough bytes for the header.
   size_t record_offset = 0;
   while (record_offset + 8 <= size) {
-    uint64_t header =
-        *reinterpret_cast<const uint64_t*>(full_view.data() + record_offset);
+    uint64_t header = ReadHeader(full_view.data() + record_offset);
     uint32_t record_len_bytes =
         fuchsia_trace_utils::ReadField<uint32_t>(header, 4, 15) *
         sizeof(uint64_t);
@@ -208,11 +212,24 @@ base::Status FuchsiaTraceTokenizer::Parse(TraceBlobView blob) {
 // recording them in |TraceStorage| they are given to |TraceSorter|. In order to
 // facilitate the parsing after sorting, a small view of the provider's string
 // and thread tables is passed alongside the record. See |FuchsiaProviderView|.
+uint64_t FuchsiaTraceTokenizer::ReadHeader(const uint8_t* data) {
+  if (!read_first_header_) {
+    read_first_header_ = true;
+    if (memcmp(data, kMagicBigEndian, sizeof(kMagicBigEndian)) == 0) {
+      byte_order_ = FuchsiaByteOrder::kBigEndian;
+    }
+  }
+  uint64_t header;
+  memcpy(&header, data, sizeof(header));
+  return fuchsia_trace_utils::WordToHost(header, byte_order_);
+}
+
 void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
   TraceStorage* storage = context_->storage.get();
   ProcessTracker* procs = context_->process_tracker.get();
 
-  fuchsia_trace_utils::RecordCursor cursor(tbv.data(), tbv.length());
+  fuchsia_trace_utils::RecordCursor cursor(tbv.data(), tbv.length(),
+                                           byte_order_);
   uint64_t header;
   if (!cursor.ReadUint64(&header)) {
     context_->stats_tracker->IncrementStats(stats::fuchsia_record_read_error);
@@ -383,6 +400,7 @@ void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
       // information if not inline, and any non-inline strings (name, category
       // for now, arg names and string values in the future).
       FuchsiaRecord record(std::move(tbv));
+      record.set_byte_order(byte_order_);
       record.set_ticks_per_second(current_provider_->ticks_per_second);
 
       uint64_t ticks;
@@ -463,6 +481,7 @@ void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
       auto blob_type = fuchsia_trace_utils::ReadField<uint32_t>(header, 48, 55);
       if (blob_type == kPerfettoBlob) {
         FuchsiaRecord record(std::move(tbv));
+        record.set_byte_order(byte_order_);
         auto blob_size =
             fuchsia_trace_utils::ReadField<uint32_t>(header, 32, 46);
         auto name_ref =
@@ -589,6 +608,7 @@ void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
               fuchsia_trace_utils::ReadField<uint32_t>(header, 36, 43);
 
           FuchsiaRecord record(std::move(tbv));
+          record.set_byte_order(byte_order_);
           record.set_ticks_per_second(current_provider_->ticks_per_second);
 
           int64_t ts;
@@ -639,6 +659,7 @@ void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
         }
         case kSchedulerEventContextSwitch: {
           FuchsiaRecord record(std::move(tbv));
+          record.set_byte_order(byte_order_);
           record.set_ticks_per_second(current_provider_->ticks_per_second);
 
           int64_t ts;
@@ -683,6 +704,7 @@ void FuchsiaTraceTokenizer::ParseRecord(TraceBlobView tbv) {
         }
         case kSchedulerEventThreadWakeup: {
           FuchsiaRecord record(std::move(tbv));
+          record.set_byte_order(byte_order_);
           record.set_ticks_per_second(current_provider_->ticks_per_second);
 
           int64_t ts;
@@ -757,10 +779,9 @@ class FuchsiaImporter : public TraceImporter<FuchsiaImporter> {
   ~FuchsiaImporter() override;
 
   SniffResult Sniff(const uint8_t* data, size_t size) const override {
-    static constexpr char kMagic[] = {'\x10', '\x00', '\x04', '\x46',
-                                      '\x78', '\x54', '\x16', '\x00'};
     return {size >= sizeof(kMagic) &&
-            memcmp(data, kMagic, sizeof(kMagic)) == 0};
+            (memcmp(data, kMagic, sizeof(kMagic)) == 0 ||
+             memcmp(data, kMagicBigEndian, sizeof(kMagicBigEndian)) == 0)};
   }
 
   base::StatusOr<std::unique_ptr<ChunkedTraceReader>> CreateReader(
