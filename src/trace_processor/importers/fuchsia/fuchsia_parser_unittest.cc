@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/ext/base/string_view.h"
 #include "perfetto/protozero/scattered_heap_buffer.h"
 #include "perfetto/trace_processor/trace_blob.h"
@@ -207,7 +208,10 @@ class FuchsiaTraceParserTest : public ::testing::Test {
     tokenizer_ = std::make_unique<FuchsiaTraceTokenizer>(&context_);
   }
 
-  void push_word(uint64_t word) { trace_bytes_.push_back(word); }
+  void push_word(uint64_t word) {
+    trace_bytes_.push_back(big_endian_ ? base::HostToBE(word)
+                                       : base::HostToLE(word));
+  }
 
   void ResetTraceBuffers() {
     trace_bytes_.clear();
@@ -231,6 +235,7 @@ class FuchsiaTraceParserTest : public ::testing::Test {
 
  protected:
   std::vector<uint64_t> trace_bytes_;
+  bool big_endian_ = false;
 
   TraceProcessorContext context_;
   std::unique_ptr<ClockSynchronizer> primary_sync_;
@@ -523,6 +528,26 @@ TEST_F(FuchsiaTraceParserTest, SchedulerEvents) {
   EXPECT_EQ(context_.stats_tracker->GetStats(stats::fuchsia_invalid_string_ref),
             0);
 
+  context_.sorter->ExtractEventsForced();
+}
+
+TEST_F(FuchsiaTraceParserTest, BigEndianSchedulerEvent) {
+  big_endian_ = true;
+  ResetTraceBuffers();
+  uint64_t tid = 0x1AAA'AAAA'AAAA'AAAA;
+
+  // Wakeup record on CPU 1.
+  push_word((uint64_t{2} << 60) | (1 << 20) | (uint64_t{3} << 4) | 8);
+  // Timestamp
+  push_word(0x1);
+  // Wakeup tid
+  push_word(tid);
+
+  EXPECT_CALL(*process_, UpdateThread(static_cast<uint32_t>(tid), _));
+  EXPECT_TRUE(Tokenize().ok());
+  EXPECT_EQ(context_.stats_tracker->GetStats(stats::fuchsia_record_read_error),
+            0);
+  EXPECT_EQ(context_.stats_tracker->GetStats(stats::fuchsia_invalid_event), 0);
   context_.sorter->ExtractEventsForced();
 }
 
