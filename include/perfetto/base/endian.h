@@ -21,6 +21,8 @@
 #include <stdlib.h>  // For MSVC
 #include <string.h>
 
+#include <type_traits>
+
 #include "perfetto/base/build_config.h"
 #include "perfetto/base/compiler.h"
 
@@ -205,42 +207,50 @@ inline double BEDoubleToHost(double x) {
 }
 #endif
 
-inline uint32_t HostToLE(uint32_t x) {
-  return HostToLE32(x);
-}
-inline int32_t HostToLE(int32_t x) {
-  return static_cast<int32_t>(HostToLE32(static_cast<uint32_t>(x)));
-}
-inline uint64_t HostToLE(uint64_t x) {
-  return HostToLE64(x);
-}
-inline int64_t HostToLE(int64_t x) {
-  return static_cast<int64_t>(HostToLE64(static_cast<uint64_t>(x)));
-}
-inline float HostToLE(float x) {
-  return HostToLEFloat(x);
-}
-inline double HostToLE(double x) {
-  return HostToLEDouble(x);
+// Generic byte-order conversions for any arithmetic type (signed/unsigned
+// integers, float, double). Dispatched by size; size 1 is a no-op. Handles
+// types that don't match one of the sized primitives exactly (e.g. `long long`
+// on platforms where `long` is already the 64-bit typedef).
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+inline T HostToLE(T x) {
+  if constexpr (sizeof(T) == 2) {
+    uint16_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = HostToLE16(i);
+    memcpy(&x, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 4) {
+    uint32_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = HostToLE32(i);
+    memcpy(&x, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 8) {
+    uint64_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = HostToLE64(i);
+    memcpy(&x, &i, sizeof(i));
+  }
+  return x;
 }
 
-inline uint32_t LEToHost(uint32_t x) {
-  return LE32ToHost(x);
-}
-inline int32_t LEToHost(int32_t x) {
-  return static_cast<int32_t>(LE32ToHost(static_cast<uint32_t>(x)));
-}
-inline uint64_t LEToHost(uint64_t x) {
-  return LE64ToHost(x);
-}
-inline int64_t LEToHost(int64_t x) {
-  return static_cast<int64_t>(LE64ToHost(static_cast<uint64_t>(x)));
-}
-inline float LEToHost(float x) {
-  return LEFloatToHost(x);
-}
-inline double LEToHost(double x) {
-  return LEDoubleToHost(x);
+template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>
+inline T LEToHost(T x) {
+  if constexpr (sizeof(T) == 2) {
+    uint16_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = LE16ToHost(i);
+    memcpy(&x, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 4) {
+    uint32_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = LE32ToHost(i);
+    memcpy(&x, &i, sizeof(i));
+  } else if constexpr (sizeof(T) == 8) {
+    uint64_t i;
+    memcpy(&i, &x, sizeof(i));
+    i = LE64ToHost(i);
+    memcpy(&x, &i, sizeof(i));
+  }
+  return x;
 }
 
 }  // namespace base
