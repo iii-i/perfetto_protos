@@ -54,10 +54,8 @@ class WattsonCurvesBlobReader {
   // Curve blobs are little-endian.
   template <typename T>
   T Read() {
-    static_assert(std::is_trivially_copyable_v<T>);
-    T value;
-    ReadInto(&value, sizeof(T));
-    return base::LEToHost(value);
+    static_assert(std::is_arithmetic_v<T>);
+    return base::LoadLE<T>(ReadBytes(sizeof(T)));
   }
 
   base::StringView ReadStringView(uint16_t size) {
@@ -77,11 +75,6 @@ class WattsonCurvesBlobReader {
     const uint8_t* data = data_ + offset_;
     offset_ += size;
     return data;
-  }
-
-  void ReadInto(void* dest, size_t size) {
-    const uint8_t* data = ReadBytes(size);
-    memcpy(dest, data, size);
   }
 
   const uint8_t* data_;
