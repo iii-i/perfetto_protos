@@ -234,8 +234,8 @@ FuchsiaTraceParser::ParseArgs(
 void FuchsiaTraceParser::Parse(int64_t, FuchsiaRecord fr) {
   // The timestamp is also present in the record, so we'll ignore the one
   // passed as an argument.
-  fuchsia_trace_utils::RecordCursor cursor(fr.record_view()->data(),
-                                           fr.record_view()->length());
+  fuchsia_trace_utils::RecordCursor cursor(
+      fr.record_view()->data(), fr.record_view()->length(), fr.byte_order());
   ProcessTracker* procs = context_->process_tracker.get();
   SliceTracker* slices = context_->slice_tracker.get();
 

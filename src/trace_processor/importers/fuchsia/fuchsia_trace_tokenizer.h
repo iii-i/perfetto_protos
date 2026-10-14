@@ -78,12 +78,15 @@ class FuchsiaTraceTokenizer : public ChunkedTraceReader {
   };
 
   void ParseRecord(TraceBlobView);
+  uint64_t ReadHeader(const uint8_t* data);
   void RegisterProvider(uint32_t, std::string);
 
   TraceProcessorContext* const context_;
   std::unique_ptr<TraceSorter::Stream<FuchsiaRecord>> stream_;
   FuchsiaTraceParser* parser_;
   std::vector<uint8_t> leftover_bytes_;
+  FuchsiaByteOrder byte_order_ = FuchsiaByteOrder::kLittleEndian;
+  bool read_first_header_ = false;
 
   ProtoTraceReader proto_trace_reader_;
   std::vector<uint8_t> proto_trace_data_;
