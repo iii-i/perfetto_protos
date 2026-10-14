@@ -20,7 +20,10 @@
 #include <cstdint>
 #include <cstring>
 #include <string_view>
+#include <type_traits>
 #include <vector>
+
+#include "perfetto/base/endian.h"
 
 namespace perfetto::trace_processor::util {
 
@@ -58,12 +61,26 @@ class FlatBufferWriter {
   // Writes a vector of offset elements (for vectors of tables or strings).
   Offset WriteVecOffsets(const Offset* offsets, uint32_t count);
 
-  // Writes a vector of inline structs. |data| points to |count| packed
-  // structs of |elem_size| bytes each, aligned to |elem_align|.
-  Offset WriteVecStruct(const void* data,
-                        uint32_t elem_size,
+  // Writes |count| inline scalars or structs; structs need an ADL HostToLE().
+  template <typename T>
+  Offset WriteVecStruct(const T* data,
                         uint32_t count,
-                        uint32_t elem_align);
+                        uint32_t elem_align = alignof(T)) {
+    static_assert(std::is_trivially_copyable_v<T>);
+    Align(elem_align);
+    GrowIfNeeded(static_cast<uint32_t>(sizeof(T)) * count);
+    for (uint32_t i = count; i-- > 0;) {
+      T le;
+      if constexpr (std::is_arithmetic_v<T>) {
+        le = base::HostToLE(data[i]);
+      } else {
+        le = HostToLE(data[i]);
+      }
+      PrependBytes(&le, sizeof(T));
+    }
+    Prepend<uint32_t>(count);
+    return Offset{size()};
+  }
 
   // Begins building a table. All Field* calls between StartTable/EndTable add
   // fields to this table. Tables cannot be nested: finish the child table
@@ -103,11 +120,12 @@ class FlatBufferWriter {
   // Prepends raw bytes (order preserved in the final buffer).
   void PrependBytes(const void* src, uint32_t len);
 
-  // Prepends a single scalar value.
+  // Prepends a single scalar value in little-endian order.
   template <typename T>
   void Prepend(T val) {
     GrowIfNeeded(sizeof(T));
     head_ -= sizeof(T);
+    val = base::HostToLE(val);
     memcpy(&buf_[head_], &val, sizeof(T));
   }
 
