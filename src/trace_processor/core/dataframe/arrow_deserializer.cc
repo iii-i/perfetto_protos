@@ -227,6 +227,9 @@ void CopyDenseValues(const std::vector<TraceBlobView>& pieces,
     memcpy(out, piece.data(), piece.size());
     out += piece.size();
   }
+  for (T& value : *output) {
+    value = base::LEToHost(value);
+  }
 }
 
 // Arrow has one value slot per logical row. Sparse dataframe storage keeps
@@ -307,8 +310,7 @@ base::StatusOr<LocatedBatches> LocateBatches(
     return InvalidFile();
   }
 
-  uint32_t footer_size;
-  memcpy(&footer_size, footer_size_blob->data(), sizeof(footer_size));
+  auto footer_size = Load<uint32_t>(footer_size_blob->data(), 0);
   if (static_cast<uint64_t>(footer_size) + kMinimumFileSize > file_size) {
     return InvalidFile();
   }
@@ -371,11 +373,10 @@ base::StatusOr<LocatedBatches> LocateBatches(
   auto marker = data.SliceOff(
       base + static_cast<size_t>(footer_relative - kEndOfStreamSize),
       kEndOfStreamSize);
-  MessagePrefix end_of_stream{};
   if (!marker) {
     return InvalidFile();
   }
-  memcpy(&end_of_stream, marker->data(), sizeof(end_of_stream));
+  auto end_of_stream = Load<MessagePrefix>(marker->data(), 0);
   if (end_of_stream.continuation != kContinuation ||
       end_of_stream.metadata_size != 0) {
     return InvalidFile();
@@ -407,9 +408,9 @@ base::StatusOr<Message> ReadMessage(const util::TraceBlobViewReader& data,
   uint32_t continuation = 0;
   int32_t metadata_size = 0;
   if (prefix) {
-    memcpy(&continuation, prefix->data(), sizeof(continuation));
-    memcpy(&metadata_size, prefix->data() + sizeof(continuation),
-           sizeof(metadata_size));
+    MessagePrefix p = Load<MessagePrefix>(prefix->data(), 0);
+    continuation = p.continuation;
+    metadata_size = p.metadata_size;
   }
   if (!prefix || continuation != kContinuation || metadata_size <= 0 ||
       static_cast<uint64_t>(metadata_size) + kMessagePrefixSize !=
