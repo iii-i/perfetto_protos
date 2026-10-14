@@ -577,7 +577,7 @@ base::StatusOr<std::vector<ColumnLineage>> RelationAnalyzer::Impl::SelectStmt(
       syntaqlite_node_is_present(select.having) ||
       syntaqlite_node_is_present(select.orderby) ||
       syntaqlite_node_is_present(select.limit_clause) ||
-      select.flags.bits.distinct || scope.size() != 1) {
+      (select.flags.raw & kSyntaqliteFlagDistinct) || scope.size() != 1) {
     preserves_rows_ = false;
   }
 
@@ -595,7 +595,7 @@ base::StatusOr<std::vector<ColumnLineage>> RelationAnalyzer::Impl::SelectStmt(
       continue;
     }
     const SyntaqliteResultColumn& column = item->result_column;
-    if (column.flags.bits.star) {
+    if (column.flags.raw & kSyntaqliteFlagColumnStar) {
       std::string_view table;
       if (const SyntaqliteNode* e = Node(p, column.expr)) {
         if (e->tag == SYNTAQLITE_NODE_COLUMN_REF) {

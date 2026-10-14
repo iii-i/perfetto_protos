@@ -31,6 +31,7 @@
 #include "perfetto/ext/base/status_or.h"
 #include "perfetto/ext/base/string_utils.h"
 #include "src/perfetto_sql/syntaqlite/syntaqlite_perfetto.h"
+#include "src/perfetto_sql/syntaqlite/utils.h"
 #include "src/trace_processor/core/common/storage_types.h"
 #include "src/trace_processor/perfetto_sql/pipeline/column_pruning.h"
 #include "src/trace_processor/perfetto_sql/pipeline/logical_plan.h"
@@ -312,7 +313,7 @@ base::StatusOr<Aggregate> Compiler::ResolveAggregate(uint32_t expr) {
   }
   const SyntaqliteFunctionCall& call = node->function_call;
   std::string function = base::ToUpper(SpanText(p_, call.func_name));
-  if (call.flags.bits.distinct) {
+  if (call.flags.raw & ::perfetto::perfetto_sql::kSyntaqliteFlagDistinct) {
     return Unsupported(expr, "DISTINCT");
   }
   if (syntaqlite_node_is_present(call.filter_clause)) {
@@ -322,7 +323,8 @@ base::StatusOr<Aggregate> Compiler::ResolveAggregate(uint32_t expr) {
     return Unsupported(call.over_clause, "OVER");
   }
   Aggregate aggregate;
-  if (function == "COUNT" && call.flags.bits.star) {
+  if (function == "COUNT" &&
+      (call.flags.raw & ::perfetto::perfetto_sql::kSyntaqliteFlagCallStar)) {
     aggregate.function = Aggregate::Function::kCountStar;
     return aggregate;
   }
@@ -335,7 +337,7 @@ base::StatusOr<Aggregate> Compiler::ResolveAggregate(uint32_t expr) {
   } else {
     return Unsupported(expr, "aggregate " + function);
   }
-  if (call.flags.bits.star) {
+  if (call.flags.raw & ::perfetto::perfetto_sql::kSyntaqliteFlagCallStar) {
     return Expected(expr, "a column name, not *");
   }
   const auto* args = Node<SyntaqliteExprList>(p_, call.args);

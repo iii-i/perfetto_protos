@@ -24,6 +24,14 @@
 
 namespace perfetto::perfetto_sql {
 
+// Masks for the `raw` member of the syntaqlite flags unions. The parser
+// sets flags via `raw` assuming LSB-first bit allocation, which does not
+// match the `bits` struct layout on big-endian ABIs (e.g. s390x). Always
+// test flags through `raw` with these masks instead of through `bits`.
+inline constexpr uint8_t kSyntaqliteFlagDistinct = 0x01;    // SelectStmt, *Call
+inline constexpr uint8_t kSyntaqliteFlagCallStar = 0x02;    // FunctionCall
+inline constexpr uint8_t kSyntaqliteFlagColumnStar = 0x01;  // ResultColumn
+
 // Returns the authored source text for |span| as a string_view into the
 // original input — no allocation. Uses span_text (not expanded_text) so
 // macro-expanded spans resolve back to the call-site source.
