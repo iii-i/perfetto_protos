@@ -99,14 +99,19 @@ void RecordCursor::SetWordIndex(size_t index) {
   word_index_ = index;
 }
 
+uint64_t RecordCursor::ReadWord(const uint8_t* data) const {
+  uint64_t word;
+  memcpy(&word, data, sizeof(word));
+  return WordToHost(word, order_);
+}
+
 bool RecordCursor::ReadTimestamp(uint64_t ticks_per_second, int64_t* ts_out) {
   const uint8_t* ts_data;
   if (!ReadWords(1, &ts_data)) {
     return false;
   }
   if (ts_out != nullptr) {
-    uint64_t ticks;
-    memcpy(&ticks, ts_data, sizeof(uint64_t));
+    uint64_t ticks = ReadWord(ts_data);
     *ts_out = TicksToNs(ticks, ticks_per_second);
   }
   return true;
@@ -134,8 +139,8 @@ bool RecordCursor::ReadInlineThread(FuchsiaThreadInfo* thread_out) {
     return false;
   }
   if (thread_out != nullptr) {
-    memcpy(&thread_out->pid, thread_data, sizeof(uint64_t));
-    memcpy(&thread_out->tid, thread_data + sizeof(uint64_t), sizeof(uint64_t));
+    thread_out->pid = ReadWord(thread_data);
+    thread_out->tid = ReadWord(thread_data + sizeof(uint64_t));
   }
   return true;
 }
@@ -146,7 +151,7 @@ bool RecordCursor::ReadInt64(int64_t* out) {
     return false;
   }
   if (out != nullptr) {
-    memcpy(out, out_data, sizeof(int64_t));
+    *out = static_cast<int64_t>(ReadWord(out_data));
   }
   return true;
 }
@@ -157,7 +162,7 @@ bool RecordCursor::ReadUint64(uint64_t* out) {
     return false;
   }
   if (out != nullptr) {
-    memcpy(out, out_data, sizeof(uint64_t));
+    *out = ReadWord(out_data);
   }
   return true;
 }
@@ -170,7 +175,8 @@ bool RecordCursor::ReadDouble(double* out) {
     return false;
   }
   if (out != nullptr) {
-    memcpy(out, out_data, sizeof(double));
+    uint64_t word = ReadWord(out_data);
+    memcpy(out, &word, sizeof(double));
   }
   return true;
 }
