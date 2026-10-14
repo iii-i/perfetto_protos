@@ -22,12 +22,14 @@
 #include <optional>
 #include <vector>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/base/status.h"
 #include "perfetto/ext/base/string_view.h"
 #include "perfetto/trace_processor/trace_blob.h"
 #include "perfetto/trace_processor/trace_blob_view.h"
 #include "src/base/test/status_matchers.h"
 #include "src/trace_processor/containers/string_pool.h"
+#include "src/trace_processor/core/dataframe/arrow_internal.h"
 #include "src/trace_processor/core/dataframe/dataframe.h"
 #include "src/trace_processor/core/dataframe/specs.h"
 #include "src/trace_processor/core/dataframe/typed_cursor.h"
@@ -44,27 +46,13 @@ using arrow_test::RoundTrip;
 using arrow_test::Serialize;
 using perfetto::base::gtest_matchers::IsError;
 
-struct TestFieldNode {
-  int64_t length;
-  int64_t null_count;
-};
-
-struct TestArrowBuffer {
-  int64_t offset;
-  int64_t length;
-};
-
-struct TestBlock {
-  int64_t offset;
-  int32_t metadata_length;
-  int32_t padding;
-  int64_t body_length;
-};
+using TestFieldNode = arrow_internal::FieldNode;
+using TestArrowBuffer = arrow_internal::ArrowBuffer;
+using TestBlock = arrow_internal::Block;
 
 uint8_t* FollowMutableOffset(std::vector<uint8_t>* bytes,
                              const uint8_t* offset_location) {
-  uint32_t relative_offset;
-  memcpy(&relative_offset, offset_location, sizeof(relative_offset));
+  uint32_t relative_offset = base::LoadLE<uint32_t>(offset_location);
   size_t location = static_cast<size_t>(offset_location - bytes->data());
   return bytes->data() + location + relative_offset;
 }
@@ -75,15 +63,14 @@ uint8_t* MutableVectorData(std::vector<uint8_t>* bytes,
   const uint8_t* vector_offset = table.FieldRaw(field, sizeof(uint32_t));
   EXPECT_NE(vector_offset, nullptr);
   uint8_t* vector = FollowMutableOffset(bytes, vector_offset);
-  uint32_t count;
-  memcpy(&count, vector, sizeof(count));
+  uint32_t count = base::LoadLE<uint32_t>(vector);
   EXPECT_GT(count, 0u);
   return vector + sizeof(count);
 }
 
 size_t FooterOffset(const std::vector<uint8_t>& bytes) {
-  uint32_t footer_size;
-  memcpy(&footer_size, bytes.data() + bytes.size() - 10, sizeof(footer_size));
+  uint32_t footer_size =
+      base::LoadLE<uint32_t>(bytes.data() + bytes.size() - 10);
   return bytes.size() - 10 - footer_size;
 }
 
@@ -111,9 +98,8 @@ uint8_t* MutableBlock(std::vector<uint8_t>* bytes) {
 
 util::FlatBufferReader MutableRecordBatch(std::vector<uint8_t>* bytes) {
   TestBlock block = ReadBlock(*bytes);
-  uint32_t metadata_size;
-  memcpy(&metadata_size, bytes->data() + block.offset + 4,
-         sizeof(metadata_size));
+  uint32_t metadata_size =
+      base::LoadLE<uint32_t>(bytes->data() + block.offset + 4);
   auto message = util::FlatBufferReader::GetRoot(
       bytes->data() + block.offset + 8, metadata_size);
   EXPECT_TRUE(message.has_value());
@@ -137,9 +123,8 @@ TestBlock ReadDictionaryBlock(const std::vector<uint8_t>& bytes) {
 util::FlatBufferReader MutableDictionaryRecordBatch(
     std::vector<uint8_t>* bytes) {
   TestBlock block = ReadDictionaryBlock(*bytes);
-  uint32_t metadata_size;
-  memcpy(&metadata_size, bytes->data() + block.offset + 4,
-         sizeof(metadata_size));
+  uint32_t metadata_size =
+      base::LoadLE<uint32_t>(bytes->data() + block.offset + 4);
   auto message = util::FlatBufferReader::GetRoot(
       bytes->data() + block.offset + 8, metadata_size);
   EXPECT_TRUE(message.has_value());
@@ -582,8 +567,7 @@ TEST(ArrowDeserializerTest, RejectsCorruptFooterSize) {
   auto src = MakeDataframe(kUint32NonNull, &pool, uint32_t{1});
   std::vector<uint8_t> bytes = Serialize(src, pool);
 
-  uint32_t huge = 0x7FFFFFFF;
-  memcpy(bytes.data() + bytes.size() - 10, &huge, 4);
+  base::StoreLE<uint32_t>(bytes.data() + bytes.size() - 10, 0x7FFFFFFF);
   auto dst = Dataframe::CreateFromTypedSpec(kUint32NonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
 }
@@ -593,10 +577,9 @@ TEST(ArrowDeserializerTest, RejectsInconsistentBlockLength) {
   auto src = MakeDataframe(kUint32NonNull, &pool, uint32_t{1});
   std::vector<uint8_t> bytes = Serialize(src, pool);
 
-  TestBlock block;
-  memcpy(&block, MutableBlock(&bytes), sizeof(block));
+  TestBlock block = base::LoadLE<TestBlock>(MutableBlock(&bytes));
   block.body_length += 8;
-  memcpy(MutableBlock(&bytes), &block, sizeof(block));
+  base::StoreLE(MutableBlock(&bytes), block);
 
   auto dst = Dataframe::CreateFromTypedSpec(kUint32NonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
@@ -620,10 +603,9 @@ TEST(ArrowDeserializerTest, RejectsInconsistentFieldNode) {
 
   auto record_batch = MutableRecordBatch(&bytes);
   uint8_t* node_data = MutableVectorData(&bytes, record_batch, 1);
-  TestFieldNode node;
-  memcpy(&node, node_data, sizeof(node));
+  TestFieldNode node = base::LoadLE<TestFieldNode>(node_data);
   node.null_count = 1;
-  memcpy(node_data, &node, sizeof(node));
+  base::StoreLE(node_data, node);
 
   auto dst = Dataframe::CreateFromTypedSpec(kUint32NonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
@@ -636,11 +618,10 @@ TEST(ArrowDeserializerTest, RejectsInvalidEmptyValidityBufferOffset) {
 
   auto record_batch = MutableRecordBatch(&bytes);
   uint8_t* buffer_data = MutableVectorData(&bytes, record_batch, 2);
-  TestArrowBuffer buffer;
-  memcpy(&buffer, buffer_data, sizeof(buffer));
+  TestArrowBuffer buffer = base::LoadLE<TestArrowBuffer>(buffer_data);
   ASSERT_EQ(buffer.length, 0);
   buffer.offset = -1;
-  memcpy(buffer_data, &buffer, sizeof(buffer));
+  base::StoreLE(buffer_data, buffer);
 
   auto dst = Dataframe::CreateFromTypedSpec(kUint32NonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
@@ -655,13 +636,11 @@ TEST(ArrowDeserializerTest, RejectsInvalidStringOffsets) {
   TestBlock block = ReadDictionaryBlock(bytes);
   auto record_batch = MutableDictionaryRecordBatch(&bytes);
   uint8_t* buffer_data = MutableVectorData(&bytes, record_batch, 2);
-  TestArrowBuffer offsets_buffer;
-  memcpy(&offsets_buffer, buffer_data + sizeof(TestArrowBuffer),
-         sizeof(offsets_buffer));
-  int32_t invalid_offset = -1;
-  memcpy(bytes.data() + block.offset + block.metadata_length +
-             offsets_buffer.offset + sizeof(int32_t),
-         &invalid_offset, sizeof(invalid_offset));
+  TestArrowBuffer offsets_buffer =
+      base::LoadLE<TestArrowBuffer>(buffer_data + sizeof(TestArrowBuffer));
+  base::StoreLE<int32_t>(bytes.data() + block.offset + block.metadata_length +
+                             offsets_buffer.offset + sizeof(int32_t),
+                         -1);
 
   auto dst = Dataframe::CreateFromTypedSpec(kStringNonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
@@ -676,13 +655,11 @@ TEST(ArrowDeserializerTest, RejectsOutOfRangeDictionaryIndex) {
   TestBlock block = ReadBlock(bytes);
   auto record_batch = MutableRecordBatch(&bytes);
   uint8_t* buffer_data = MutableVectorData(&bytes, record_batch, 2);
-  TestArrowBuffer indices_buffer;
-  memcpy(&indices_buffer, buffer_data + sizeof(TestArrowBuffer),
-         sizeof(indices_buffer));
-  int32_t invalid_index = 1;
-  memcpy(bytes.data() + block.offset + block.metadata_length +
-             indices_buffer.offset,
-         &invalid_index, sizeof(invalid_index));
+  TestArrowBuffer indices_buffer =
+      base::LoadLE<TestArrowBuffer>(buffer_data + sizeof(TestArrowBuffer));
+  base::StoreLE<int32_t>(bytes.data() + block.offset + block.metadata_length +
+                             indices_buffer.offset,
+                         1);
 
   auto dst = Dataframe::CreateFromTypedSpec(kStringNonNull, &pool);
   EXPECT_THAT(Deserialize(bytes, &pool, dst.CreateSpec()), IsError());
