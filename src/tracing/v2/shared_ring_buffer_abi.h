@@ -25,6 +25,7 @@
 #include <atomic>
 #include <optional>
 
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
 #include "perfetto/ext/base/bits.h"
@@ -49,7 +50,9 @@ namespace perfetto::tracing_v2 {
 // - Each chunk starts with an atomic state word. It records ownership and the
 //   number of published fragments while the chunk belongs to a writer.
 //
-// The ABI assumes little-endian producer and service processes.
+// The ABI assumes producer and service processes with the same byte order.
+// Atomic words are in host order; byte offsets of their fields given below
+// apply to little-endian hosts. Other multi-byte fields are little-endian.
 
 // Sharing over IPC
 // ----------------
@@ -742,13 +745,14 @@ constexpr uint32_t kTargetBufferIdOffset = 4;
 constexpr uint32_t kTargetBufferPayloadOffset = 6;
 
 inline void StoreTargetBufferId(uint8_t* chunk, BufferID buffer_id) {
+  buffer_id = base::HostToLE16(buffer_id);
   memcpy(&chunk[kTargetBufferIdOffset], &buffer_id, sizeof(buffer_id));
 }
 
 inline BufferID LoadTargetBufferId(const uint8_t* chunk) {
   BufferID buffer_id;
   memcpy(&buffer_id, &chunk[kTargetBufferIdOffset], sizeof(buffer_id));
-  return buffer_id;
+  return base::LE16ToHost(buffer_id);
 }
 
 // Fragment size directory
