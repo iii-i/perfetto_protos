@@ -22,6 +22,7 @@
 #include <cstring>
 
 #include "perfetto/base/compiler.h"
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
 #include "src/trace_processor/core/common/null_types.h"
@@ -137,6 +138,20 @@ struct Block {
 };
 static_assert(sizeof(Block) == 2 * sizeof(int64_t) + 2 * sizeof(int32_t));
 
+inline MessagePrefix HostToLE(MessagePrefix v) {
+  return {base::HostToLE(v.continuation), base::HostToLE(v.metadata_size)};
+}
+inline FieldNode HostToLE(FieldNode v) {
+  return {base::HostToLE(v.length), base::HostToLE(v.null_count)};
+}
+inline ArrowBuffer HostToLE(ArrowBuffer v) {
+  return {base::HostToLE(v.offset), base::HostToLE(v.length)};
+}
+inline Block HostToLE(Block v) {
+  return {base::HostToLE(v.offset), base::HostToLE(v.metadata_length),
+          base::HostToLE(v.padding), base::HostToLE(v.body_length)};
+}
+
 inline base::Status InvalidFile() {
   return base::ErrStatus("Invalid dataframe Arrow file");
 }
@@ -193,11 +208,10 @@ inline bool IsSparse(Nullability type) {
   return IsNullable(type) && !type.Is<core::DenseNull>();
 }
 
+// Reads the |index|-th little-endian T from |data|.
 template <typename T>
 T Load(const uint8_t* data, uint32_t index) {
-  T value;
-  memcpy(&value, data + static_cast<size_t>(index) * sizeof(T), sizeof(T));
-  return value;
+  return base::LoadLE<T>(data + static_cast<size_t>(index) * sizeof(T));
 }
 
 }  // namespace perfetto::trace_processor::core::dataframe::arrow_internal
