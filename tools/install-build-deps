@@ -1080,6 +1080,9 @@ def Main():
         local_path)[0] if is_compressed else None
     compressed_dir_stamp = os.path.join(compressed_target_dir,
                                         '.stamp') if is_compressed else None
+    if is_compressed and os.path.islink(compressed_target_dir):
+      # A symlink means the dep is provided from a local build.
+      continue
 
     if ((not is_compressed and HashLocalFile(local_path) == dep.checksum) or
         (is_compressed and ReadFile(compressed_dir_stamp) == dep.checksum)):
