@@ -97,13 +97,15 @@ void Append(std::vector<uint8_t>* output, const void* data, size_t size) {
 }
 
 void AppendU32(std::vector<uint8_t>* output, uint32_t value) {
+  value = base::HostToLE(value);
   Append(output, &value, sizeof(value));
 }
 
 void AppendMessage(std::vector<uint8_t>* output,
                    const std::vector<uint8_t>& metadata,
                    uint32_t padded_size) {
-  MessagePrefix prefix{kContinuation, static_cast<int32_t>(padded_size)};
+  MessagePrefix prefix =
+      HostToLE(MessagePrefix{kContinuation, static_cast<int32_t>(padded_size)});
   Append(output, &prefix, sizeof(prefix));
   Append(output, metadata.data(), metadata.size());
   output->resize(output->size() + padded_size - metadata.size(), 0);
@@ -150,6 +152,12 @@ class BufferedOutput {
       }
     }
     return base::OkStatus();
+  }
+
+  template <typename T>
+  base::Status AppendLE(T value) {
+    value = base::HostToLE(value);
+    return Append(&value, sizeof(value));
   }
 
   base::Status AppendPadding(size_t size) {
@@ -277,12 +285,10 @@ W::Offset BuildRecordBatch(W& w,
                            uint32_t rows,
                            const std::vector<FieldNode>& nodes,
                            const std::vector<ArrowBuffer>& buffers) {
-  auto buffer_vector =
-      w.WriteVecStruct(buffers.data(), sizeof(ArrowBuffer),
-                       static_cast<uint32_t>(buffers.size()), alignof(int64_t));
-  auto node_vector =
-      w.WriteVecStruct(nodes.data(), sizeof(FieldNode),
-                       static_cast<uint32_t>(nodes.size()), alignof(int64_t));
+  auto buffer_vector = w.WriteVecStruct(
+      buffers.data(), static_cast<uint32_t>(buffers.size()), alignof(int64_t));
+  auto node_vector = w.WriteVecStruct(
+      nodes.data(), static_cast<uint32_t>(nodes.size()), alignof(int64_t));
   w.StartTable();
   w.FieldI64(record_batch_field::kLength, rows);
   w.FieldOffset(record_batch_field::kNodes, node_vector);
@@ -306,11 +312,10 @@ W::Offset BuildFooter(W& w,
                       W::Offset schema,
                       const std::vector<Block>& dictionary_blocks,
                       const Block& block) {
-  auto blocks = w.WriteVecStruct(&block, sizeof(block), kRecordBatchCount,
-                                 alignof(int64_t));
+  auto blocks = w.WriteVecStruct(&block, kRecordBatchCount, alignof(int64_t));
   auto dictionaries = w.WriteVecStruct(
-      dictionary_blocks.data(), sizeof(Block),
-      static_cast<uint32_t>(dictionary_blocks.size()), alignof(int64_t));
+      dictionary_blocks.data(), static_cast<uint32_t>(dictionary_blocks.size()),
+      alignof(int64_t));
   w.StartTable();
   w.FieldI16(footer_field::kVersion, kMetadataV5);
   w.FieldOffset(footer_field::kSchema, schema);
@@ -348,10 +353,10 @@ base::Status WriteUtf8OffsetBuffer(const std::vector<StringPool::Id>& values,
                                    BufferedOutput* output) {
   int32_t offset = 0;
   for (StringPool::Id id : values) {
-    RETURN_IF_ERROR(output->Append(&offset, sizeof(offset)));
+    RETURN_IF_ERROR(output->AppendLE(offset));
     offset += static_cast<int32_t>(pool.Get(id).size());
   }
-  RETURN_IF_ERROR(output->Append(&offset, sizeof(offset)));
+  RETURN_IF_ERROR(output->AppendLE(offset));
   PERFETTO_CHECK(static_cast<uint32_t>(offset) == data_length);
   size_t bytes = static_cast<size_t>(
       Utf8OffsetBufferSize(static_cast<uint32_t>(values.size())));
@@ -364,12 +369,30 @@ base::Status WriteIdBuffer(uint32_t rows,
                            const ArrowSerializer::WriteFn& write) {
   BufferedOutput output(scratch, write);
   for (uint32_t row = 0; row < rows; ++row) {
-    RETURN_IF_ERROR(output.Append(&row, sizeof(row)));
+    RETURN_IF_ERROR(output.AppendLE(row));
   }
   size_t bytes = static_cast<size_t>(rows) * sizeof(uint32_t);
   RETURN_IF_ERROR(
       output.AppendPadding(static_cast<size_t>(AlignToArrow(bytes)) - bytes));
   return output.Finish();
+}
+
+base::Status AppendNumericLE(BufferedOutput* output,
+                             const uint8_t* src,
+                             size_t element_size) {
+  if constexpr (PERFETTO_IS_LITTLE_ENDIAN()) {
+    return output->Append(src, element_size);
+  } else {
+    if (element_size == sizeof(uint64_t)) {
+      uint64_t v;
+      memcpy(&v, src, sizeof(v));
+      return output->AppendLE(v);
+    }
+    PERFETTO_DCHECK(element_size == sizeof(uint32_t));
+    uint32_t v;
+    memcpy(&v, src, sizeof(v));
+    return output->AppendLE(v);
+  }
 }
 
 base::Status WriteNumericBuffer(uint32_t rows,
@@ -383,20 +406,23 @@ base::Status WriteNumericBuffer(uint32_t rows,
   size_t padded = static_cast<size_t>(AlignToArrow(bytes));
   const uint8_t* source = NumericData(column.storage);
   const uint8_t zeros[kArrowAlignment] = {};
-  if (!sparse) {
-    RETURN_IF_ERROR(Emit(write, source, bytes));
-    return Emit(write, zeros, padded - bytes);
+  if constexpr (PERFETTO_IS_LITTLE_ENDIAN()) {
+    if (!sparse) {
+      RETURN_IF_ERROR(Emit(write, source, bytes));
+      return Emit(write, zeros, padded - bytes);
+    }
   }
 
   // Sparse dataframe storage omits null rows. Arrow numeric arrays do not, so
   // scatter values while streaming logical rows through bounded scratch space.
-  PERFETTO_DCHECK(validity);
+  // Big-endian hosts also take this path for dense columns to byte-swap.
+  PERFETTO_DCHECK(validity || !sparse);
   BufferedOutput output(scratch, write);
-  StorageIndexMapper mapper(validity, sparse);
+  StorageIndexMapper mapper(sparse ? validity : nullptr, sparse);
   for (uint32_t row = 0; row < rows; ++row) {
     if (mapper.HasValue(row)) {
-      RETURN_IF_ERROR(output.Append(source + mapper.Take(row) * element_size,
-                                    element_size));
+      RETURN_IF_ERROR(AppendNumericLE(
+          &output, source + mapper.Take(row) * element_size, element_size));
     } else {
       RETURN_IF_ERROR(output.Append(zeros, element_size));
     }
@@ -689,7 +715,7 @@ base::Status ArrowSerializer::WriteDictionaryIndices(
       PERFETTO_CHECK(found);
       index = static_cast<DictionaryIndex>(*found);
     }
-    RETURN_IF_ERROR(output.Append(&index, sizeof(index)));
+    RETURN_IF_ERROR(output.AppendLE(index));
   }
   size_t bytes = static_cast<size_t>(rows) * sizeof(DictionaryIndex);
   RETURN_IF_ERROR(

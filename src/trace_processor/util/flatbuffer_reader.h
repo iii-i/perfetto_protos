@@ -21,10 +21,22 @@
 #include <cstring>
 #include <optional>
 #include <string_view>
+#include <type_traits>
 
 #include "perfetto/base/compiler.h"
+#include "perfetto/base/endian.h"
 
 namespace perfetto::trace_processor::util {
+
+// Structs need an ADL LEToHost().
+template <typename T>
+T FlatBufferLEToHost(T v) {
+  if constexpr (std::is_arithmetic_v<T>) {
+    return base::LEToHost(v);
+  } else {
+    return LEToHost(v);
+  }
+}
 
 // Minimal read-only FlatBuffer API, sufficient for parsing Arrow IPC metadata
 // and similar small schemas without pulling in the flatbuffers library.
@@ -63,7 +75,7 @@ class FlatBufferScalarVec {
     }
     T v;
     memcpy(&v, data_ + static_cast<uint64_t>(i) * sizeof(T), sizeof(T));
-    return v;
+    return FlatBufferLEToHost(v);
   }
 
  private:
@@ -140,7 +152,7 @@ class FlatBufferReader {
     }
     T v;
     memcpy(&v, p, sizeof(T));
-    return v;
+    return base::LEToHost(v);
   }
 
   // Reads a string field (offset -> length-prefixed UTF-8). Empty view if

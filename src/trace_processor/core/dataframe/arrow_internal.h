@@ -20,16 +20,16 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 
 #include "perfetto/base/compiler.h"
+#include "perfetto/base/endian.h"
 #include "perfetto/base/logging.h"
 #include "perfetto/base/status.h"
 #include "src/trace_processor/core/common/null_types.h"
 #include "src/trace_processor/core/common/storage_types.h"
 
 namespace perfetto::trace_processor::core::dataframe::arrow_internal {
-
-static_assert(PERFETTO_IS_LITTLE_ENDIAN());
 
 // Constants and packed structs below mirror the official Arrow flatbuffer
 // schema. Keeping them together makes the serializer and deserializer use the
@@ -139,6 +139,25 @@ struct Block {
 };
 static_assert(sizeof(Block) == 2 * sizeof(int64_t) + 2 * sizeof(int32_t));
 
+// Byte-swapping is an involution, so LEToHost() reuses HostToLE().
+inline MessagePrefix HostToLE(MessagePrefix v) {
+  return {base::HostToLE(v.continuation), base::HostToLE(v.metadata_size)};
+}
+inline FieldNode HostToLE(FieldNode v) {
+  return {base::HostToLE(v.length), base::HostToLE(v.null_count)};
+}
+inline ArrowBuffer HostToLE(ArrowBuffer v) {
+  return {base::HostToLE(v.offset), base::HostToLE(v.length)};
+}
+inline Block HostToLE(Block v) {
+  return {base::HostToLE(v.offset), base::HostToLE(v.metadata_length),
+          base::HostToLE(v.padding), base::HostToLE(v.body_length)};
+}
+template <typename T>
+inline auto LEToHost(T v) -> decltype(HostToLE(v)) {
+  return HostToLE(v);
+}
+
 inline base::Status InvalidFile() {
   return base::ErrStatus("Invalid dataframe Arrow file");
 }
@@ -195,11 +214,16 @@ inline bool IsSparse(Nullability type) {
   return IsNullable(type) && !type.Is<core::DenseNull>();
 }
 
+// Reads the |index|-th little-endian T from |data|.
 template <typename T>
 T Load(const uint8_t* data, uint32_t index) {
   T value;
   memcpy(&value, data + static_cast<size_t>(index) * sizeof(T), sizeof(T));
-  return value;
+  if constexpr (std::is_arithmetic_v<T>) {
+    return base::LEToHost(value);
+  } else {
+    return LEToHost(value);
+  }
 }
 
 }  // namespace perfetto::trace_processor::core::dataframe::arrow_internal
