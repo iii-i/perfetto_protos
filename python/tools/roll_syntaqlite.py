@@ -65,6 +65,9 @@ ARTIFACTS = [
 ]
 
 NPM_META_URL = 'https://registry.npmjs.org/syntaqlite'
+NPM_TARBALL_URL = 'https://registry.npmjs.org/syntaqlite/-/syntaqlite-%s.tgz'
+NPM_TARBALL_RE = (r'https://registry\.npmjs\.org/syntaqlite/-/'
+                  r'syntaqlite-[0-9][0-9.]*\.tgz')
 
 
 def sha256_url(url):
@@ -113,18 +116,23 @@ def patch_install_build_deps(version, digests):
 
 
 def patch_package_json(version):
-  patch(PACKAGE_JSON, [(r'("syntaqlite":\s*"\^)[0-9][0-9.]*(")',
-                        r'\g<1>%s\g<2>' % version, 'package.json version')])
+  patch(PACKAGE_JSON,
+        [(r'("syntaqlite":\s*")%s(")' % NPM_TARBALL_RE, r'\g<1>%s\g<2>' %
+          (NPM_TARBALL_URL % version), 'package.json version')])
 
 
 def patch_pnpm_lock(version, integrity):
+  url = NPM_TARBALL_URL % version
   subs = [
-      (r'(syntaqlite:\n\s*specifier: \^)[0-9][0-9.]*(\n\s*version: )[0-9][0-9.]*',
-       r'\g<1>%s\g<2>%s' % (version, version), 'importer entry'),
-      (r'(\n  syntaqlite@)[0-9][0-9.]*(:\n\s*resolution: \{integrity: )'
-       r'sha512-[A-Za-z0-9+/=]+', r'\g<1>%s\g<2>%s' % (version, integrity),
+      (r'(syntaqlite:\n\s*specifier: )%s(\n\s*version: )%s' %
+       (NPM_TARBALL_RE, NPM_TARBALL_RE), r'\g<1>%s\g<2>%s' % (url, url),
+       'importer entry'),
+      (r'(\n  syntaqlite@)%s(:\n\s*resolution: \{integrity: )'
+       r'sha512-[A-Za-z0-9+/=]+(, tarball: )%s(\}\n\s*version: )[0-9][0-9.]*' %
+       (NPM_TARBALL_RE, NPM_TARBALL_RE),
+       r'\g<1>%s\g<2>%s\g<3>%s\g<4>%s' % (url, integrity, url, version),
        'resolution entry'),
-      (r'(\n  syntaqlite@)[0-9][0-9.]*(: \{\})', r'\g<1>%s\g<2>' % version,
+      (r'(\n  syntaqlite@)%s(: \{\})' % NPM_TARBALL_RE, r'\g<1>%s\g<2>' % url,
        'snapshot entry'),
   ]
   patch(PNPM_LOCK, subs)
