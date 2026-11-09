@@ -554,7 +554,6 @@ base::StatusOr<Dataframe> DeserializeFromArrow(
     const util::TraceBlobViewReader& data,
     StringPool* pool,
     const DataframeSpec& spec) {
-#if PERFETTO_IS_LITTLE_ENDIAN()
   if (spec.column_names.size() != spec.column_specs.size() ||
       spec.column_names.size() > std::numeric_limits<uint32_t>::max()) {
     return base::ErrStatus("Invalid dataframe spec");
@@ -654,10 +653,6 @@ base::StatusOr<Dataframe> DeserializeFromArrow(
   ++dataframe.non_column_mutations_;
   dataframe.Finalize();
   return dataframe;
-#else   // PERFETTO_IS_LITTLE_ENDIAN()
-  return base::ErrStatus(
-      "Arrow deserialization is not supported on big-endian hosts");
-#endif  // PERFETTO_IS_LITTLE_ENDIAN()
 }
 
 }  // namespace perfetto::trace_processor::core::dataframe
