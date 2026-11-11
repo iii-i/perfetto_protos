@@ -49,6 +49,18 @@ perf_event_attr ByteSwap(perf_event_attr v) {
   v.sample_period = ByteSwap(v.sample_period);
   v.sample_type = ByteSwap(v.sample_type);
   v.read_format = ByteSwap(v.read_format);
+  // Bit-field allocation follows byte order, so reverse the bits in each byte.
+  auto swap_bits = [](uint64_t x, int shift, uint64_t mask) {
+    return ((x >> shift) & mask) | ((x & mask) << shift);
+  };
+  uint64_t flags;
+  memcpy(&flags, &v.read_format + 1, sizeof(flags));
+  flags = swap_bits(flags, 4, 0x0f0f0f0f0f0f0f0f);
+  flags = swap_bits(flags, 2, 0x3333333333333333);
+  flags = swap_bits(flags, 1, 0x5555555555555555);
+  memcpy(&v.read_format + 1, &flags, sizeof(flags));
+  // Undo the bit reversal within the only multi-bit flag.
+  v.precise_ip = ((v.precise_ip & 1u) << 1) | (v.precise_ip >> 1);
   v.wakeup_events = ByteSwap(v.wakeup_events);
   v.bp_type = ByteSwap(v.bp_type);
   v.bp_addr = ByteSwap(v.bp_addr);

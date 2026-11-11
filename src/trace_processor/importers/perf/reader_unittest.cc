@@ -18,6 +18,9 @@
 
 #include <stddef.h>
 #include <cstdint>
+#include <cstring>
+#include <utility>
+#include <vector>
 
 #include "perfetto/base/endian.h"
 #include "perfetto/trace_processor/trace_blob.h"
@@ -79,6 +82,64 @@ TEST(ReaderUnittest, Skip) {
   uint64_t val;
   reader.Read(val);
   EXPECT_EQ(val, 4u);
+}
+
+void Append(std::vector<uint8_t>& out,
+            uint64_t value,
+            size_t size,
+            ByteOrder order) {
+  for (size_t i = 0; i < size; ++i) {
+    size_t shift = order == ByteOrder::kLittleEndian ? i : size - 1 - i;
+    out.push_back(static_cast<uint8_t>(value >> (8 * shift)));
+  }
+}
+
+TraceBlobView TraceBlobViewFromBytes(const std::vector<uint8_t>& bytes) {
+  auto blob = TraceBlob::Allocate(bytes.size());
+  memcpy(blob.mutable_data(), bytes.data(), bytes.size());
+  return TraceBlobView(std::move(blob));
+}
+
+// Encodes the flags bit-fields the way a compiler for |order| lays them out.
+uint64_t AttrFlags(ByteOrder order) {
+  constexpr int kFreqBit = 10;
+  constexpr int kPreciseIpBit = 15;
+  constexpr int kPreciseIpWidth = 2;
+  constexpr int kSampleIdAllBit = 18;
+  if (order == ByteOrder::kLittleEndian) {
+    return (1ull << kFreqBit) | (2ull << kPreciseIpBit) |
+           (1ull << kSampleIdAllBit);
+  }
+  return (1ull << (63 - kFreqBit)) |
+         (2ull << (64 - kPreciseIpBit - kPreciseIpWidth)) |
+         (1ull << (63 - kSampleIdAllBit));
+}
+
+TEST(ReaderUnittest, ReadPerfEventAttr) {
+  for (ByteOrder order : {ByteOrder::kLittleEndian, ByteOrder::kBigEndian}) {
+    std::vector<uint8_t> bytes;
+    Append(bytes, PERF_TYPE_SOFTWARE, 4, order);  // type
+    Append(bytes, 64, 4, order);                  // size
+    Append(bytes, 0x1234, 8, order);              // config
+    Append(bytes, 4000, 8, order);                // sample_freq
+    Append(bytes, 0, 8, order);                   // sample_type
+    Append(bytes, 0, 8, order);                   // read_format
+    Append(bytes, AttrFlags(order), 8, order);    // flags
+    Append(bytes, 0, 8, order);                   // wakeup_events, bp_type
+    Append(bytes, 0, 8, order);                   // bp_addr
+    perf_event_attr attr;
+    Reader reader(TraceBlobViewFromBytes(bytes), order);
+    ASSERT_TRUE(reader.ReadPerfEventAttr(attr, bytes.size()));
+    EXPECT_EQ(attr.type, PERF_TYPE_SOFTWARE);
+    EXPECT_EQ(attr.size, 64u);
+    EXPECT_EQ(attr.config, 0x1234u);
+    EXPECT_EQ(attr.sample_freq, 4000u);
+    EXPECT_EQ(attr.freq, 1u);
+    EXPECT_EQ(attr.precise_ip, 2u);
+    EXPECT_EQ(attr.sample_id_all, 1u);
+    EXPECT_EQ(attr.disabled, 0u);
+    EXPECT_EQ(attr.mmap_data, 0u);
+  }
 }
 
 }  // namespace
