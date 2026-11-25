@@ -1997,9 +1997,11 @@ source_set("libunwindstack") {
     sources += [ "android-unwinding/libunwindstack/AsmGetRegsS390x.S" ]
   }
   configs -= [
+    "//gn/standalone:cxx_standard",
     "//gn/standalone:extra_warnings",
     "//gn/standalone:visibility_hidden",
   ]
+  configs += [ "//gn/standalone:c++20" ]
   cflags = [
     "-DFAKE_LOG_DEVICE=1",
 
@@ -2051,6 +2053,8 @@ executable("libunwindstack_unittests") {
     "android-unwinding/libunwindstack/tests/ElfFake.cpp",
     "android-unwinding/libunwindstack/tests/ElfTestUtils.cpp",
     "android-unwinding/libunwindstack/tests/LogFake.cpp",
+    "android-unwinding/libunwindstack/tests/RegsIterateTest.cpp",
+    "android-unwinding/libunwindstack/tests/RegsStepIfSignalHandlerTest.cpp",
     "android-unwinding/libunwindstack/tests/RegsTest.cpp",
     "android-unwinding/libunwindstack/utils/MemoryFake.cpp",
   ]

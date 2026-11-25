@@ -238,7 +238,7 @@ config("cxx_standard") {
 
 # Used in buildtools dependencies for standalone builds.
 config("c++20") {
-  visibility = [ "//buildtools:libc++config" ]
+  visibility = [ "//buildtools:*" ]
   if (is_win) {
     cflags_cc = [ "/std:c++20" ]
   } else {
